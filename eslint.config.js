@@ -28,6 +28,7 @@ export default [
         requestAnimationFrame: "readonly",
         cancelAnimationFrame: "readonly",
         performance: "readonly",
+        getComputedStyle: "readonly",
         HUB_PEOPLE: "readonly"
       }
     },

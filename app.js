@@ -20,6 +20,7 @@
     networkMap: document.getElementById("networkMap"),
     mapCanvas: document.getElementById("mapCanvas"),
     countryLayer: document.getElementById("countryLayer"),
+    countryLabelLayer: document.getElementById("countryLabelLayer"),
     connectionLayer: document.getElementById("connectionLayer"),
     markerLayer: document.getElementById("markerLayer"),
     metroLayer: document.getElementById("metroLayer"),
@@ -123,6 +124,7 @@
   let mapFeatures = [];
   let focusAnimation = 0;
   let lastExpandedState = false;
+  let labelRelayout = 0;
 
   function escapeHTML(value = "") {
     return String(value)
@@ -580,7 +582,10 @@
     warnAboutStrayCities();
     markerOffsets = computeMarkerOffsets();
 
-    if (mapFeatures.length) buildCountries();
+    if (mapFeatures.length) {
+      buildCountries();
+      buildCountryLabels();
+    }
     buildConnections();
     buildMarkers();
     buildMetroMarkers();
@@ -592,7 +597,7 @@
     // Conexiones y nodos por encima de los paises.
     els.networkMap
       .querySelector("#mapViewport")
-      .append(els.countryLayer, els.connectionLayer, els.markerLayer, els.metroLayer);
+      .append(els.countryLayer, els.countryLabelLayer, els.connectionLayer, els.markerLayer, els.metroLayer);
     renderMapState(getFilteredCities());
 
     // Quien llega por enlace directo a una ciudad la encuentra ya centrada;
@@ -666,6 +671,92 @@
         }
       });
       els.countryLayer.appendChild(path);
+    });
+  }
+
+  // --- Nombres de país -----------------------------------------------------
+  //
+  // El anillo exterior del polígono de mayor área da el centroide de área, que
+  // para casi todos los países de la región cae dentro del territorio. Cuando
+  // no —países cóncavos o archipiélagos— se descarta la etiqueta antes que
+  // dibujarla en el mar.
+
+  function ringArea(ring) {
+    let area = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      area += (ring[j][0] + ring[i][0]) * (ring[j][1] - ring[i][1]);
+    }
+    return Math.abs(area / 2);
+  }
+
+  function ringCentroid(ring) {
+    let twiceArea = 0;
+    let x = 0;
+    let y = 0;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const cross = ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
+      twiceArea += cross;
+      x += (ring[j][0] + ring[i][0]) * cross;
+      y += (ring[j][1] + ring[i][1]) * cross;
+    }
+    if (!twiceArea) return null;
+    return [x / (3 * twiceArea), y / (3 * twiceArea)];
+  }
+
+  function pointInRing(point, ring) {
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const [xi, yi] = ring[i];
+      const [xj, yj] = ring[j];
+      const cruza =
+        yi > point[1] !== yj > point[1] && point[0] < ((xj - xi) * (point[1] - yi)) / (yj - yi) + xi;
+      if (cruza) inside = !inside;
+    }
+    return inside;
+  }
+
+  function largestRing(geometry) {
+    const polygons = geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
+    let mayor = null;
+    let mayorArea = 0;
+    polygons.forEach(polygon => {
+      const ring = polygon[0];
+      const area = ringArea(ring);
+      if (area > mayorArea) {
+        mayorArea = area;
+        mayor = ring;
+      }
+    });
+    return mayor;
+  }
+
+  function buildCountryLabels() {
+    els.countryLabelLayer.innerHTML = "";
+    mapFeatures.forEach(feature => {
+      const ring = largestRing(feature.geometry);
+      if (!ring) return;
+      const centro = ringCentroid(ring);
+      if (!centro || !pointInRing(centro, ring)) return;
+
+      const [x, y] = project(centro);
+      const puntos = ring.map(coord => project(coord));
+      const xs = puntos.map(punto => punto[0]);
+      const ys = puntos.map(punto => punto[1]);
+      const anchoPais = Math.max(...xs) - Math.min(...xs);
+      const altoPais = Math.max(...ys) - Math.min(...ys);
+
+      const label = createSvg("text", {
+        x: x.toFixed(1),
+        y: y.toFixed(1),
+        "text-anchor": "middle",
+        class: `country-label ${memberCountries.has(feature.properties.name) ? "is-member" : ""}`,
+        "data-country-label": feature.properties.name,
+        "data-country-width": anchoPais.toFixed(1),
+        "data-country-height": altoPais.toFixed(1),
+        "data-country-area": (anchoPais * altoPais).toFixed(0)
+      });
+      label.textContent = feature.properties.name;
+      els.countryLabelLayer.appendChild(label);
     });
   }
 
@@ -801,6 +892,134 @@
       label.setAttribute("y", (pos.y + best.candidate.dy).toFixed(1));
       label.setAttribute("text-anchor", best.candidate.anchor);
       placed.push(best.box);
+    });
+
+    layoutCountryLabels(placed);
+  }
+
+  // Cajas que ocupan ahora mismo las etiquetas ya colocadas de ciudades y
+  // grupos, junto con los nodos. Al cambiar el zoom solo se recalculan los
+  // nombres de país: mover las etiquetas de ciudad haría que saltaran mientras
+  // el usuario acerca o desplaza el mapa.
+  function occupiedBoxes() {
+    const zoom = view.width / baseView.width;
+    const alto = LABEL_HEIGHT * zoom;
+    const boxes = cities.map(city => {
+      const pos = markerPosition(city);
+      return {
+        x1: pos.x - NODE_RADIUS,
+        y1: pos.y - NODE_RADIUS,
+        x2: pos.x + NODE_RADIUS,
+        y2: pos.y + NODE_RADIUS
+      };
+    });
+    metros.forEach(metro => {
+      const [x, y] = project([metro.lon, metro.lat]);
+      boxes.push({ x1: x - METRO_RADIUS, y1: y - METRO_RADIUS, x2: x + METRO_RADIUS, y2: y + METRO_RADIUS });
+    });
+
+    els.networkMap.querySelectorAll(".city-marker .city-label, .metro-marker .city-label").forEach(label => {
+      const grupo = label.closest("g");
+      if (grupo && getComputedStyle(grupo).display === "none") return;
+      const x = Number(label.getAttribute("x"));
+      const y = Number(label.getAttribute("y"));
+      const anchor = label.getAttribute("text-anchor");
+      let width;
+      try {
+        width = label.getComputedTextLength() || 0;
+      } catch {
+        width = 0;
+      }
+      if (!width) width = label.textContent.length * 5.2 * zoom;
+      const left = anchor === "start" ? x : anchor === "end" ? x - width : x - width / 2;
+      boxes.push({ x1: left - 2, y1: y - alto, x2: left + width + 2, y2: y + 3 });
+    });
+
+    return boxes;
+  }
+
+  // Los nombres de país se resuelven al final, así que ceden ante las etiquetas
+  // de ciudad y de grupo, que son el contenido del atlas. Ceden solo ante
+  // ellas: pasar por detrás de un nodo no impide leer un rótulo tenue, y
+  // tratar los nodos como obstáculo dejaba sin nombre justo a los países con
+  // ciudades en la red, que son los que más importa nombrar.
+  //
+  // Tampoco se exige que el texto quepa dentro del territorio: Chile o Ecuador
+  // no lo permitirían nunca, y en cartografía es corriente sacar el rótulo de
+  // un país estrecho al espacio contiguo. Sí se prueban desplazamientos
+  // verticales antes de renunciar.
+  // Desplazamientos en fracción del tamaño del propio país, para que uno
+  // grande pueda buscar hueco lejos de su centro y uno pequeño apenas se mueva.
+  const COUNTRY_LABEL_OFFSETS = [
+    [0, 0],
+    [0, -0.13],
+    [0, 0.13],
+    [-0.2, 0],
+    [0.2, 0],
+    [-0.2, -0.13],
+    [0.2, -0.13],
+    [-0.2, 0.13],
+    [0.2, 0.13],
+    [0, -0.27],
+    [0, 0.27]
+  ];
+
+  function layoutCountryLabels(placed) {
+    const zoom = view.width / baseView.width;
+    const alto = 9 * zoom;
+
+    // Los países grandes eligen primero; los pequeños ceden si no queda hueco.
+    const labels = [...els.countryLabelLayer.querySelectorAll(".country-label")].sort(
+      (a, b) => Number(b.getAttribute("data-country-area")) - Number(a.getAttribute("data-country-area"))
+    );
+
+    labels.forEach(label => {
+      if (!label.getAttribute("data-base-y")) {
+        label.setAttribute("data-base-x", label.getAttribute("x"));
+        label.setAttribute("data-base-y", label.getAttribute("y"));
+      }
+      const baseX = Number(label.getAttribute("data-base-x"));
+      const baseY = Number(label.getAttribute("data-base-y"));
+      const anchoPais = Number(label.getAttribute("data-country-width"));
+      const altoPais = Number(label.getAttribute("data-country-height"));
+
+      let width;
+      try {
+        width = label.getComputedTextLength() || 0;
+      } catch {
+        width = 0;
+      }
+      if (!width) width = label.textContent.length * 4.6 * zoom;
+
+      // Sacar el rótulo fuera del territorio vale para un país estrecho, pero
+      // no para una isla diminuta: el nombre acabaría flotando en el océano,
+      // lejos de lo que nombra. Al acercar el texto encoge en coordenadas del
+      // mapa, baja la proporción y esos nombres van apareciendo.
+      if (width > anchoPais * 3) {
+        label.classList.add("is-hidden");
+        return;
+      }
+
+      let colocada = null;
+      for (const [fx, fy] of COUNTRY_LABEL_OFFSETS) {
+        const x = baseX + fx * anchoPais;
+        const y = baseY + fy * altoPais;
+        const box = { x1: x - width / 2 - 2, y1: y - alto, x2: x + width / 2 + 2, y2: y + 3 };
+        const fuera = box.x1 < 2 || box.x2 > baseView.width - 2 || box.y1 < 2 || box.y2 > baseView.height - 2;
+        if (fuera) continue;
+        if (placed.some(other => overlapArea(box, other) > 0)) continue;
+        colocada = { x, y, box };
+        break;
+      }
+
+      if (colocada) {
+        label.setAttribute("x", colocada.x.toFixed(1));
+        label.setAttribute("y", colocada.y.toFixed(1));
+        label.classList.remove("is-hidden");
+        placed.push(colocada.box);
+      } else {
+        label.classList.add("is-hidden");
+      }
     });
   }
 
@@ -1952,6 +2171,18 @@
       lastExpandedState = metrosExpanded();
       renderMapState(getFilteredCities());
     }
+    scheduleLabelRelayout();
+  }
+
+  // Acercarse deja sitio para más nombres de país, porque el texto encoge en
+  // coordenadas del mapa. Se recalcula en el siguiente fotograma para no
+  // hacerlo una vez por cada evento de movimiento.
+  function scheduleLabelRelayout() {
+    if (labelRelayout || !els.countryLabelLayer.childElementCount) return;
+    labelRelayout = requestAnimationFrame(() => {
+      labelRelayout = 0;
+      layoutCountryLabels(occupiedBoxes());
+    });
   }
 
   function prefersReducedMotion() {
@@ -2152,25 +2383,46 @@
     // punto medio; con uno, se conserva el arrastre de siempre.
     const activePointers = new Map();
     let pinch = null;
+    let viewOnFirstTouch = null;
 
     function pointerPair() {
       const points = [...activePointers.values()];
       return points.length === 2 ? points : null;
     }
 
+    function pointerMidpoint(pair) {
+      return { x: (pair[0].x + pair[1].x) / 2, y: (pair[0].y + pair[1].y) / 2 };
+    }
+
+    // El gesto se ancla a la vista que había cuando bajó el primer dedo y al
+    // punto del mapa que quedó bajo el centro del pellizco. Todo lo demás se
+    // deriva de ahí: sin ese ancla fijo, cada fotograma recalculaba la
+    // referencia sobre la vista ya modificada y el mapa se iba solo.
     function beginPinch(pair) {
+      // El primer dedo pudo arrastrar un poco antes de que llegara el segundo.
+      if (viewOnFirstTouch) view = { ...viewOnFirstTouch };
       drag = null;
       els.networkMap.classList.remove("is-dragging");
+
+      const rect = els.networkMap.getBoundingClientRect();
+      const mid = pointerMidpoint(pair);
+      const px = (mid.x - rect.left) / rect.width;
+      const py = (mid.y - rect.top) / rect.height;
+
       pinch = {
         startDistance: Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y) || 1,
-        startWidth: view.width,
+        startView: { ...view },
+        anchorX: view.x + px * view.width,
+        anchorY: view.y + py * view.height,
         moved: false
       };
+      setViewBoxAndSync();
     }
 
     els.networkMap.addEventListener("pointerdown", event => {
       if (event.pointerType !== "mouse") {
         activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (activePointers.size === 1) viewOnFirstTouch = { ...view };
         const pair = pointerPair();
         if (pair) {
           beginPinch(pair);
@@ -2201,11 +2453,22 @@
         if (!pinch) beginPinch(pair);
         const distance = Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y) || 1;
         if (Math.abs(distance - pinch.startDistance) > 6) pinch.moved = true;
-        zoomMap(
-          pinch.startDistance / distance,
-          { x: (pair[0].x + pair[1].x) / 2, y: (pair[0].y + pair[1].y) / 2 },
-          pinch.startWidth
-        );
+
+        const rect = els.networkMap.getBoundingClientRect();
+        const mid = pointerMidpoint(pair);
+        const px = (mid.x - rect.left) / rect.width;
+        const py = (mid.y - rect.top) / rect.height;
+        const nextWidth = pinch.startView.width * (pinch.startDistance / distance);
+        const nextHeight = nextWidth * (pinch.startView.height / pinch.startView.width);
+
+        // El punto anclado al empezar se mantiene bajo el centro del gesto.
+        view = clampView({
+          x: pinch.anchorX - px * nextWidth,
+          y: pinch.anchorY - py * nextHeight,
+          width: nextWidth,
+          height: nextHeight
+        });
+        setViewBoxAndSync();
         return;
       }
       if (!drag) return;
@@ -2222,20 +2485,24 @@
     const endDrag = event => {
       activePointers.delete(event.pointerId);
       if (pinch) {
-        // Al levantar un dedo se cierra el gesto; el que queda no debe
-        // interpretarse como el inicio de un arrastre ni como un toque.
-        if (activePointers.size < 2) {
-          state.suppressClick = pinch.moved;
-          pinch = null;
-          if (state.suppressClick) {
-            setTimeout(() => {
-              state.suppressClick = false;
-            }, 0);
-          }
+        if (activePointers.size >= 2) return;
+        state.suppressClick = pinch.moved;
+        pinch = null;
+        // Si queda un dedo en pantalla, pasa a arrastrar desde donde está, en
+        // vez de dejar el mapa muerto hasta levantar y volver a tocar.
+        const [rest] = [...activePointers.values()];
+        if (rest) {
+          drag = { startX: rest.x, startY: rest.y, viewX: view.x, viewY: view.y, moved: true };
+          viewOnFirstTouch = { ...view };
+        } else if (state.suppressClick) {
+          setTimeout(() => {
+            state.suppressClick = false;
+          }, 0);
         }
         return;
       }
       if (!drag) return;
+      viewOnFirstTouch = null;
       state.suppressClick = drag.moved;
       drag = null;
       els.networkMap.classList.remove("is-dragging");

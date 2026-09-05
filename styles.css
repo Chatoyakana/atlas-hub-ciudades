@@ -2515,11 +2515,11 @@ svg {
     font-size: 0;
   }
 
+  /* En móvil esta tarjeta se colocaba sobre México y tapaba media
+     Centroamérica, para repetir lo que ya dice la barra del mapa justo
+     encima: cuántos nodos hay y qué hacer con ellos. */
   .map-overview-card {
-    width: 205px;
-    top: 10px;
-    bottom: auto;
-    left: 10px;
+    display: none;
   }
 
   .zoom-controls {
@@ -3548,4 +3548,25 @@ svg {
   background: var(--hub-orange-soft);
   color: var(--ink-soft);
   text-align: left;
+}
+
+/* Nombres de país: capa de fondo del mapa. Deben leerse como territorio, no
+   como nodos de la red, así que van en versalita tenue y sin trazo blanco. */
+.country-label {
+  fill: #7ba0a8;
+  font-family: var(--font);
+  font-size: calc(9px * var(--map-zoom, 1));
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  user-select: none;
+}
+
+.country-label.is-member {
+  fill: #5b8794;
+}
+
+.country-label.is-hidden {
+  display: none;
 }

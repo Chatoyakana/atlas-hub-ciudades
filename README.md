@@ -6,7 +6,7 @@ Prototipo navegable de exploración cartográfica para la red del HUB de Ciudade
 
 ## Qué incluye
 
-- Mapa vectorial interactivo de América Latina y el Caribe.
+- Mapa vectorial interactivo de América Latina y el Caribe, con nombres de país colocados sin colisiones.
 - 17 ciudades del directorio público del HUB en 10 países.
 - Búsqueda por ciudad, persona, institución, proyecto o iniciativa.
 - Vista de directorio: las 51 personas de la red con su institución, ciudad y procedencia, sujeta a los mismos filtros.
