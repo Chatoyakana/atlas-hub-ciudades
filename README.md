@@ -27,7 +27,31 @@ La interfaz distingue dos tipos de registro:
 - **Fuente HUB:** nombres, cargos e instituciones publicados en el [directorio oficial](https://hubdeciudades.org/directorio/), además de algunos proyectos destacados en el sitio del HUB.
 - **Demo:** datos base, fechas de adhesión, personas adicionales, premios, programas e iniciativas creados para probar el prototipo. No deben interpretarse como información oficial.
 
-La cartografía utiliza geometrías simplificadas de **Natural Earth**, escala 1:110m.
+La cartografía utiliza geometrías simplificadas de **Natural Earth**, escala 1:110m
+(Admin 0 – Countries). Natural Earth es de dominio público y no exige atribución,
+pero se declara aquí y en el pie del mapa.
+
+Las posiciones de los nodos y de las etiquetas se calculan al dibujar: los nodos que
+caen a menos de 15 px entre sí —las tres comunas de Santiago quedan a poco más de
+1 px— se agrupan y se despliegan en abanico con línea guía, y cada etiqueta elige
+entre ocho posiciones candidatas la que no choca con otras etiquetas, con los nodos
+ni con el borde del lienzo. No hay desplazamientos calibrados a mano.
+
+## Datos personales
+
+`data/personas-hub.js` contiene nombres, cargos e instituciones de 25 personas
+identificables, tomados del [directorio público del HUB](https://hubdeciudades.org/directorio/).
+Son datos de fuente pública, pero versionarlos en Git los vuelve permanentes: el
+historial los conserva aunque el directorio cambie.
+
+Por eso el archivo está separado del resto del modelo, y la aplicación funciona con
+él vacío: si se elimina su contenido, el atlas carga igual y solo muestra las
+personas de demostración. Cualquier solicitud de rectificación o supresión se aplica
+ahí, en un único lugar.
+
+Si detectas un dato tuyo que quieres corregir o retirar, abre una incidencia en el
+repositorio o escribe a quien lo mantiene; se aplica sobre ese archivo y se refleja
+en el siguiente despliegue.
 
 ## Ejecutar localmente
 
@@ -47,6 +71,7 @@ Luego abre `http://localhost:4173`.
 - `index.html`: estructura de la aplicación.
 - `styles.css`: sistema visual y diseño adaptable.
 - `data.js`: modelo de conocimiento y contenido del prototipo.
+- `data/personas-hub.js`: datos personales tomados del directorio público, aislados a propósito (ver más abajo).
 - `app.js`: filtros, mapa, paneles, exportación e interacciones.
 - `data/latam-countries.geojson`: capa cartográfica local.
 - `assets/hub-mark.png`: marca gráfica usada en la cabecera.

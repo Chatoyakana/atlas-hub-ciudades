@@ -2552,3 +2552,74 @@ svg {
 p: 13px;
   }
 }
+
+/* ---------------------------------------------------------------
+   Accesibilidad
+   --------------------------------------------------------------- */
+
+/* Texto disponible para lectores de pantalla y oculto a la vista. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* A-05: anillo de foco propio. Antes el foco dependía del anillo por defecto
+   del navegador, que hereda el color del elemento y desaparecía sobre los
+   chips inactivos. Solo se dibuja en navegación por teclado. */
+:where(
+  button,
+  a[href],
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex="-1"])
+):focus-visible {
+  outline: 2px solid var(--hub-blue);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.search-box:focus-within {
+  outline: 2px solid var(--hub-blue);
+  outline-offset: 2px;
+}
+.search-box input:focus-visible {
+  outline: none;
+}
+
+/* Los nodos del mapa son grupos SVG: el contorno no los envuelve bien, así que
+   el foco se marca engrosando el anillo del propio marcador. */
+.city-marker:focus-visible {
+  outline: none;
+}
+.city-marker:focus-visible .marker-ring {
+  stroke: var(--hub-blue);
+  stroke-width: 3.5;
+}
+.country-shape:focus-visible {
+  outline: none;
+  stroke: var(--hub-blue);
+  stroke-width: 2;
+}
+
+/* A-04: dos animaciones —el pulso de los nodos y el indicador «en vivo»— se
+   ejecutaban en bucle permanente sin atender la preferencia del sistema. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

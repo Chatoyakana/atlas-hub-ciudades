@@ -40,7 +40,8 @@
     mobileResultCount: document.getElementById("mobileResultCount"),
     mobileBackdrop: document.getElementById("mobileBackdrop"),
     methodDialog: document.getElementById("methodDialog"),
-    toast: document.getElementById("toast")
+    toast: document.getElementById("toast"),
+    statusAnnouncer: document.getElementById("statusAnnouncer")
   };
 
   const allThemes = [...new Set(cities.flatMap(city => city.themes))].sort((a, b) => a.localeCompare(b, "es"));
@@ -60,7 +61,9 @@
     detailTab: "resumen",
     connectionsVisible: true,
     filteredIds: new Set(cities.map(city => city.id)),
-    suppressClick: false
+    suppressClick: false,
+    filtersOpener: null,
+    detailOpener: null
   };
 
   const svgNS = "http://www.w3.org/2000/svg";
@@ -68,6 +71,7 @@
   let view = { ...baseView };
   let drag = null;
   let toastTimer = null;
+  let announceTimer = null;
   let mapFeatures = [];
 
   function escapeHTML(value = "") {
@@ -924,6 +928,7 @@
       button.addEventListener("click", () => {
         state.detailTab = button.dataset.detailTab;
         renderDetail();
+        announce(`${city.name}, sección ${button.textContent.trim()}.`);
       });
     });
     els.detailContent.querySelector("[data-action='share']")?.addEventListener("click", () => shareCity(city));
@@ -935,28 +940,43 @@
     updateBackdrop();
   }
 
+  function isOverlayWidth() {
+    return window.innerWidth <= 1120;
+  }
+
   function selectCity(id, { updateHash = true } = {}) {
     if (!cityById.has(id)) return;
+    if (state.selectedId !== id && isOverlayWidth()) state.detailOpener = document.activeElement;
     state.selectedId = id;
     state.detailTab = "resumen";
     if (updateHash) replaceCityHash(id);
     applyFilters({ preserveSelection: true });
     hideTooltip();
+    announce(`Ficha de ${cityById.get(id).name} abierta.`);
 
     const listItem = els.cityList.querySelector(`[data-city-id="${CSS.escape(id)}"]`);
-    listItem?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    // A-04: un behavior "smooth" explicito ignora scroll-behavior del CSS.
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    listItem?.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion ? "auto" : "smooth" });
 
     if (window.innerWidth <= 700) {
       els.explorerPanel.classList.remove("is-open");
     }
     updateBackdrop();
+
+    // Despues de updateBackdrop: hasta aqui la ficha podia seguir inerte por
+    // tener el panel de filtros abierto, y un elemento inerte no toma el foco.
+    if (isOverlayWidth() && state.detailOpener) focusFirstIn(els.detailContent);
   }
 
   function closeDetail() {
+    const opener = state.detailOpener;
     state.selectedId = null;
     state.detailTab = "resumen";
+    state.detailOpener = null;
     replaceCityHash(null);
     applyFilters({ preserveSelection: true });
+    if (opener?.isConnected) opener.focus();
   }
 
   function replaceCityHash(id) {
@@ -1018,6 +1038,17 @@
     showToast("Ficha exportada en formato JSON.");
   }
 
+  // A-02: la ficha ya no es una region viva. En vez de releer la tarjeta
+  // completa en cada render, se anuncia solo lo que cambio.
+  function announce(message) {
+    if (!els.statusAnnouncer) return;
+    els.statusAnnouncer.textContent = "";
+    // Una pausa corta fuerza a los lectores a releer un texto repetido.
+    // setTimeout y no requestAnimationFrame: rAF no corre en pestanas ocultas.
+    clearTimeout(announceTimer);
+    announceTimer = setTimeout(() => { els.statusAnnouncer.textContent = message; }, 60);
+  }
+
   function showToast(message) {
     els.toast.textContent = message;
     els.toast.classList.add("is-visible");
@@ -1067,6 +1098,28 @@
     const filtersOpen = els.explorerPanel.classList.contains("is-open") && window.innerWidth <= 700;
     const detailsOpen = Boolean(state.selectedId) && window.innerWidth <= 1120;
     els.mobileBackdrop.hidden = !(filtersOpen || detailsOpen);
+    updateInertBackground(filtersOpen, detailsOpen);
+  }
+
+  // A-03: mientras una capa cubre la pantalla, lo que queda detras se marca
+  // inerte para que no reciba foco ni lecturas de pantalla.
+  const INERT_REGIONS = [".topbar", ".page-heading", ".map-panel"];
+
+  function updateInertBackground(filtersOpen, detailsOpen) {
+    const overlayOpen = filtersOpen || detailsOpen;
+    INERT_REGIONS.forEach(selector => {
+      const region = document.querySelector(selector);
+      if (region) region.inert = overlayOpen;
+    });
+    els.explorerPanel.inert = detailsOpen && !filtersOpen;
+    els.detailPanel.inert = filtersOpen;
+  }
+
+  function focusFirstIn(container) {
+    const focusable = container.querySelector(
+      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    focusable?.focus();
   }
 
   function setActiveNav(navId) {
@@ -1079,14 +1132,20 @@
   }
 
   function openFilters() {
+    state.filtersOpener = document.activeElement;
     els.explorerPanel.classList.add("is-open");
     updateBackdrop();
     setTimeout(() => els.citySearch.focus(), 180);
   }
 
   function closeFilters() {
+    const wasOpen = els.explorerPanel.classList.contains("is-open");
     els.explorerPanel.classList.remove("is-open");
     updateBackdrop();
+    if (wasOpen && state.filtersOpener?.isConnected) {
+      state.filtersOpener.focus();
+      state.filtersOpener = null;
+    }
   }
 
   function wireEvents() {
@@ -1179,7 +1238,7 @@
     els.closeFiltersButton.addEventListener("click", closeFilters);
     els.mobileBackdrop.addEventListener("click", () => {
       closeFilters();
-      if (window.innerWidth <= 1120 && state.selectedId) closeDetail();
+      if (isOverlayWidth() && state.selectedId) closeDetail();
     });
 
     document.querySelectorAll("[data-open-method]").forEach(button => {
@@ -1218,7 +1277,7 @@
       }
       if (event.key === "Escape") {
         if (els.explorerPanel.classList.contains("is-open")) closeFilters();
-        else if (window.innerWidth <= 1120 && state.selectedId) closeDetail();
+        else if (isOverlayWidth() && state.selectedId) closeDetail();
       }
     });
 
@@ -1229,7 +1288,7 @@
 
     window.addEventListener("resize", () => {
       if (window.innerWidth > 700) els.explorerPanel.classList.remove("is-open");
-      if (window.innerWidth > 1120) els.detailPanel.classList.toggle("is-open", Boolean(state.selectedId));
+      if (!isOverlayWidth()) els.detailPanel.classList.toggle("is-open", Boolean(state.selectedId));
       updateBackdrop();
     });
   }

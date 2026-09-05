@@ -21,9 +21,6 @@ const rawCities = [
     elevation: 1172,
     summary: "Nodo centroamericano enfocado en innovación de servicios públicos, participación barrial y resiliencia urbana.",
     themes: ["Innovación pública", "Participación ciudadana", "Datos urbanos"],
-    officialPeople: [
-      { name: "Alonso Vargas Chinchilla", role: "Agencia Local de Innovación y Desarrollo", source: "hub" }
-    ],
     demoPeople: [
       { name: "Valeria Solís Rojas", role: "Coordinadora de innovación abierta" },
       { name: "Diego Araya Jiménez", role: "Especialista en datos urbanos" }
@@ -48,9 +45,6 @@ const rawCities = [
     elevation: 604,
     summary: "Comuna metropolitana que prueba soluciones de eficiencia hídrica, movilidad segura y gestión basada en evidencia.",
     themes: ["Agua y resiliencia", "Movilidad sostenible", "Innovación pública"],
-    officialPeople: [
-      { name: "Ignacio Fuenzalida Rojas", role: "Director HUB Providencia", source: "hub" }
-    ],
     demoPeople: [
       { name: "Antonia Leiva Contreras", role: "Diseñadora de servicios públicos" },
       { name: "Tomás Valdés Mena", role: "Analista de movilidad urbana" }
@@ -84,10 +78,6 @@ const rawCities = [
     elevation: 390,
     summary: "Ecosistema municipal de GovTech y economía del conocimiento que conecta desafíos públicos con talento emprendedor.",
     themes: ["Innovación pública", "Transformación digital", "Datos urbanos"],
-    officialPeople: [
-      { name: "Delfina Bustos Quiroga", role: "Directora de Economía del Conocimiento · Referente CorLab", source: "hub" },
-      { name: "Ramiro Ocampo Vidal", role: "Director General de GovTech y CorLab", source: "hub" }
-    ],
     demoPeople: [
       { name: "Lucía Ferreyra", role: "Líder de experimentación urbana" }
     ],
@@ -111,10 +101,6 @@ const rawCities = [
     elevation: 522,
     summary: "Nodo de planificación sostenible que combina observación territorial, adaptación climática y participación ciudadana.",
     themes: ["Planificación urbana", "Datos urbanos", "Agua y resiliencia"],
-    officialPeople: [
-      { name: "Ernesto Cifuentes Alfaro", role: "Director General", source: "hub" },
-      { name: "Rocío Balboa Nájera", role: "Técnico Administrativo G.", source: "hub" }
-    ],
     demoPeople: [
       { name: "Mariana López Coutiño", role: "Especialista en planeación participativa" }
     ],
@@ -138,9 +124,6 @@ const rawCities = [
     elevation: 496,
     summary: "Laboratorio comunal que articula innovación pública, circularidad y respuestas locales a la crisis hídrica.",
     themes: ["Agua y resiliencia", "Economía circular", "Innovación pública"],
-    officialPeople: [
-      { name: "Camila Hormazábal Pinto", role: "Líder de Innovación Pública", source: "hub" }
-    ],
     demoPeople: [
       { name: "Camila Sepúlveda Díaz", role: "Coordinadora de proyectos urbanos" },
       { name: "Felipe Muñoz Arancibia", role: "Gestor de alianzas comunitarias" }
@@ -174,9 +157,6 @@ const rawCities = [
     elevation: 177,
     summary: "Ciudad fronteriza que explora soluciones de movilidad humana, mercados resilientes y planificación inclusiva.",
     themes: ["Movilidad sostenible", "Planificación urbana", "Participación ciudadana"],
-    officialPeople: [
-      { name: "Aarón Zepeda Molina", role: "Director General", source: "hub" }
-    ],
     demoPeople: [
       { name: "Fernanda Méndez Roblero", role: "Coordinadora de movilidad e inclusión" },
       { name: "Luis Castellanos Pérez", role: "Analista territorial" }
@@ -201,10 +181,6 @@ const rawCities = [
     elevation: 4,
     summary: "Nodo costero de innovación y competitividad con foco en transformación digital y adaptación basada en ecosistemas.",
     themes: ["Transformación digital", "Agua y resiliencia", "Innovación pública"],
-    officialPeople: [
-      { name: "Fabián Zambrano Peñafiel", role: "Director de Planificación", source: "hub" },
-      { name: "Doménica Alcívar Rendón", role: "Director de Innovación y Transformación Digital", source: "hub" }
-    ],
     demoPeople: [
       { name: "Valentina Cedeño Vera", role: "Líder de innovación climática" }
     ],
@@ -228,10 +204,6 @@ const rawCities = [
     elevation: 43,
     summary: "Laboratorio urbano con experiencia en gobierno abierto, movilidad barrial y políticas públicas centradas en cuidados.",
     themes: ["Datos urbanos", "Movilidad sostenible", "Participación ciudadana"],
-    officialPeople: [
-      { name: "Lucía Bentancur Píriz", role: "Gerenta de Innovación", source: "hub" },
-      { name: "Federico Sosa Etcheverry", role: "Coordinador de Montevideo Lab", source: "hub" }
-    ],
     demoPeople: [
       { name: "Lucía Bentancur Silva", role: "Diseñadora de políticas públicas" }
     ],
@@ -255,10 +227,6 @@ const rawCities = [
     elevation: 2850,
     summary: "Distrito metropolitano andino que vincula gestión del agua, ordenamiento territorial y soluciones basadas en naturaleza.",
     themes: ["Agua y resiliencia", "Hábitat y vivienda", "Planificación urbana"],
-    officialPeople: [
-      { name: "Nathaly Cabascango Terán", role: "Directora Metropolitana de Desarrollo Urbanístico", source: "hub" },
-      { name: "Sebastián Yépez Andrade", role: "Analista de Normativa de Vivienda", source: "hub" }
-    ],
     demoPeople: [
       { name: "Mateo Andrade Cárdenas", role: "Especialista en infraestructura verde" }
     ],
@@ -292,9 +260,6 @@ const rawCities = [
     elevation: 79,
     summary: "Distrito costero que experimenta con caminabilidad, confort térmico y servicios digitales de proximidad.",
     themes: ["Movilidad sostenible", "Transformación digital", "Agua y resiliencia"],
-    officialPeople: [
-      { name: "Renzo Málaga Cabrera", role: "Director del HUB de Innovación Miraflores", source: "hub" }
-    ],
     demoPeople: [
       { name: "Camila Salazar Ponce", role: "Coordinadora de diseño urbano" },
       { name: "Andrés Núñez del Prado", role: "Analista de innovación digital" }
@@ -319,10 +284,6 @@ const rawCities = [
     elevation: 934,
     summary: "Capital del sur de Brasil que combina tradición de planificación, movilidad y nuevas capacidades de resiliencia urbana.",
     themes: ["Movilidad sostenible", "Agua y resiliencia", "Datos urbanos"],
-    officialPeople: [
-      { name: "Larissa Nakamura Bittencourt", role: "Asesora de Relaciones Internacionales", source: "hub" },
-      { name: "Rafael Siqueira Andrade", role: "Jefa de Logística · Defensa Civil", source: "hub" }
-    ],
     demoPeople: [
       { name: "Ana Beatriz Souza", role: "Coordinadora de resiliencia urbana" }
     ],
@@ -346,9 +307,6 @@ const rawCities = [
     elevation: 1495,
     summary: "Nodo andino de ciudad inteligente que conecta capacidades públicas, tecnología cívica y aprendizaje en las comunas.",
     themes: ["Transformación digital", "Datos urbanos", "Innovación pública"],
-    officialPeople: [
-      { name: "Manuela Estrada Zapata", role: "Subsecretaría de Ciudad Inteligente", source: "hub" }
-    ],
     demoPeople: [
       { name: "Carolina Restrepo Maya", role: "Líder de innovación cívica" },
       { name: "Sebastián Vélez Toro", role: "Científico de datos urbanos" }
@@ -373,10 +331,6 @@ const rawCities = [
     elevation: 1500,
     summary: "Capital centroamericana que ensaya soluciones accesibles para vivienda, confort térmico y planificación metropolitana.",
     themes: ["Hábitat y vivienda", "Agua y resiliencia", "Planificación urbana"],
-    officialPeople: [
-      { name: "Ana Lucía Chacón Solórzano", role: "Gerente de Planificación", source: "hub" },
-      { name: "Byron Estuardo Mejía Recinos", role: "Coordinadora Técnica", source: "hub" }
-    ],
     demoPeople: [
       { name: "Ana Lucía Paredes", role: "Especialista en vivienda y clima" }
     ],
@@ -410,9 +364,6 @@ const rawCities = [
     elevation: 610,
     summary: "Comuna de Santiago enfocada en circularidad, barrios caminables y experimentación con comunidades educativas.",
     themes: ["Economía circular", "Movilidad sostenible", "Participación ciudadana"],
-    officialPeople: [
-      { name: "Tomás Cárcamo Vergara", role: "Director HUB Ñuñoa", source: "hub" }
-    ],
     demoPeople: [
       { name: "Francisca Rojas Silva", role: "Coordinadora de economía circular" },
       { name: "Nicolás Fuentes Araya", role: "Diseñador de movilidad barrial" }
@@ -437,10 +388,6 @@ const rawCities = [
     elevation: 2640,
     summary: "Distrito capital que articula planeación, datos territoriales e innovación aplicada a servicios y sistemas de cuidado.",
     themes: ["Datos urbanos", "Planificación urbana", "Innovación pública"],
-    officialPeople: [
-      { name: "Nicolás Espitia Bermúdez", role: "Jefe del Laboratorio de Ciudad de Bogotá", source: "hub" },
-      { name: "Laura Camila Trujillo Peña", role: "Profesional Especializado", source: "hub" }
-    ],
     demoPeople: [
       { name: "Laura Méndez Cárdenas", role: "Diseñadora de servicios urbanos" }
     ],
@@ -464,9 +411,6 @@ const rawCities = [
     elevation: 746,
     summary: "Ciudad oasis que trabaja sobre gestión hídrica, confort urbano y análisis territorial para la adaptación climática.",
     themes: ["Agua y resiliencia", "Datos urbanos", "Planificación urbana"],
-    officialPeople: [
-      { name: "Valentina Arrieta Funes", role: "Jefa de Área · Laboratorio y Análisis Urbano", source: "hub" }
-    ],
     demoPeople: [
       { name: "Paula Quiroga Funes", role: "Arquitecta de adaptación climática" },
       { name: "Martín Sosa Pereyra", role: "Analista geoespacial" }
@@ -491,9 +435,6 @@ const rawCities = [
     elevation: 1415,
     summary: "Ecosistema del norte de México que conecta emprendimiento, innovación pública y respuestas al calor urbano.",
     themes: ["Innovación pública", "Transformación digital", "Agua y resiliencia"],
-    officialPeople: [
-      { name: "Ivonne Carrasco Ontiveros", role: "Líder de Alianzas Estratégicas", source: "hub" }
-    ],
     demoPeople: [
       { name: "Sofía Villalobos Cano", role: "Gestora de ecosistema emprendedor" },
       { name: "Carlos Ortega Molina", role: "Especialista en tecnología urbana" }
@@ -530,6 +471,10 @@ function initials(name) {
     .toUpperCase();
 }
 
+// Los datos personales viven en data/personas-hub.js, aislados para poder
+// aplicar una rectificación o una baja sin tocar el resto del modelo.
+const hubPeople = window.HUB_PEOPLE || {};
+
 const initiativeNarratives = [
   (title, theme, cityName) =>
     `Activación breve que pone a prueba ${title.toLowerCase()} con equipos municipales de ${cityName} y cierra con una guía de réplica para la red.`,
@@ -550,8 +495,9 @@ const awardBodies = [
 
 const HUB_CITIES = rawCities.map((city, cityIndex) => {
   const people = [
-    ...city.officialPeople.map(person => ({
+    ...(hubPeople[city.id] || []).map(person => ({
       ...person,
+      source: "hub",
       initials: initials(person.name),
       organization: city.institution,
       sourceUrl: HUB_DIRECTORY_URL
