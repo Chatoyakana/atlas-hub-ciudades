@@ -925,7 +925,8 @@ svg {
   stroke-width: 3px;
   paint-order: stroke fill;
   font-family: var(--font);
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--map-zoom, 1));
+  stroke-width: calc(3px * var(--map-zoom, 1));
   font-weight: 800;
   letter-spacing: -0.01em;
   pointer-events: none;
@@ -2882,4 +2883,63 @@ svg {
     margin-top: 5px;
     font-size: 12px;
   }
+}
+
+/* ---------------------------------------------------------------
+   Áreas metropolitanas · nodo agrupado
+   --------------------------------------------------------------- */
+
+.metro-marker {
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+}
+
+.metro-marker.is-hidden {
+  display: none;
+}
+
+.metro-marker.is-muted {
+  opacity: 0.32;
+}
+
+.metro-ring {
+  fill: white;
+  stroke: var(--hub-blue);
+  stroke-width: 2;
+}
+
+.metro-core {
+  fill: var(--hub-blue);
+}
+
+.metro-count {
+  fill: white;
+  font-family: var(--font);
+  font-size: calc(9.5px * var(--map-zoom, 1));
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.metro-label {
+  font-weight: 700;
+}
+
+.metro-marker:hover .metro-ring {
+  stroke: var(--hub-blue-dark);
+  stroke-width: 2.6;
+}
+
+.metro-marker:focus-visible {
+  outline: none;
+}
+
+.metro-marker:focus-visible .metro-ring {
+  stroke: var(--hub-blue);
+  stroke-width: 3.5;
+}
+
+/* Las comunas ocultas tras un grupo desaparecen del mapa y del orden de
+   tabulación mientras el grupo esté cerrado. */
+.city-marker.is-collapsed {
+  display: none;
 }

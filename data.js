@@ -593,6 +593,31 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
   };
 });
 
+/*
+ * Áreas metropolitanas.
+ *
+ * Tres comunas de la red —Providencia, Ñuñoa y Renca— pertenecen al Gran
+ * Santiago y quedan a poco más de un píxel entre sí a escala continental. En
+ * vez de dibujarlas siempre desplegadas, el mapa muestra un nodo de Santiago
+ * mientras está alejado y las abre al acercar.
+ *
+ * Un área metropolitana no es una ciudad de la red: no aparece en el
+ * directorio, no suma a los KPI y no tiene ficha propia. Es solo una forma de
+ * agrupar en el mapa.
+ */
+const HUB_METROS = [
+  {
+    id: "santiago",
+    name: "Santiago",
+    country: "Chile",
+    code: "CL",
+    lat: -33.4489,
+    lon: -70.6693,
+    members: ["providencia", "nunoa", "renca"],
+    note: "Tres comunas de la red en el Gran Santiago"
+  }
+];
+
 const HUB_CONNECTIONS = [
   { from: "quito", to: "ciudad-guatemala", theme: "Hábitat y vivienda" },
   { from: "quito", to: "mendoza", theme: "Agua y resiliencia" },
@@ -708,9 +733,21 @@ function validateAtlas(cities, connections) {
 
 const validated = validateAtlas(HUB_CITIES, HUB_CONNECTIONS);
 
+// Un área metropolitana sin miembros válidos no tiene nada que agrupar.
+const validIds = new Set(validated.cities.map(city => city.id));
+const validatedMetros = HUB_METROS.map(metro => ({
+  ...metro,
+  members: metro.members.filter(id => validIds.has(id))
+})).filter(metro => {
+  if (metro.members.length >= 2) return true;
+  validated.issues.push(`Área metropolitana "${metro.id}" descartada: necesita 2 o más ciudades válidas.`);
+  return false;
+});
+
 window.HUB_ATLAS = {
   cities: validated.cities,
   connections: validated.connections,
+  metros: validatedMetros,
   issues: validated.issues,
   sources: {
     directory: HUB_DIRECTORY_URL,

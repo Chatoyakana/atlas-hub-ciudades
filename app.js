@@ -3,6 +3,7 @@
 
   const atlas = window.HUB_ATLAS;
   const cities = atlas.cities;
+  const metros = atlas.metros || [];
   const connections = atlas.connections;
   const cityById = new Map(cities.map(city => [city.id, city]));
   const referenceDate = new Date(`${atlas.referenceDate}T12:00:00`);
@@ -21,6 +22,7 @@
     countryLayer: document.getElementById("countryLayer"),
     connectionLayer: document.getElementById("connectionLayer"),
     markerLayer: document.getElementById("markerLayer"),
+    metroLayer: document.getElementById("metroLayer"),
     mapTooltip: document.getElementById("mapTooltip"),
     mapOverviewCard: document.getElementById("mapOverviewCard"),
     overviewHeadline: document.getElementById("overviewHeadline"),
@@ -67,6 +69,7 @@
     .sort((a, b) => b.count - a.count || a.theme.localeCompare(b.theme, "es"));
 
   const hashCity = new URLSearchParams(location.hash.replace(/^#/, "")).get("ciudad");
+  const openedFromLink = cityById.has(hashCity);
   const state = {
     selectedId: cityById.has(hashCity) ? hashCity : window.innerWidth > 1120 ? "medellin" : null,
     search: "",
@@ -82,6 +85,17 @@
     directoryOpen: false
   };
 
+  // Ciudad -> área metropolitana a la que pertenece, para saber cuáles se
+  // ocultan tras un nodo agrupado mientras el mapa está alejado.
+  const metroByCity = new Map();
+  metros.forEach(metro => metro.members.forEach(id => metroByCity.set(id, metro)));
+
+  // Por debajo de este ancho de viewBox el mapa se considera "acercado" y los
+  // grupos se abren. baseView.width ronda 672 con el encuadre calculado.
+  const METRO_EXPAND_WIDTH = 430;
+  // Nivel al que se acerca el mapa al seleccionar una ciudad.
+  const FOCUS_WIDTH = 300;
+
   const svgNS = "http://www.w3.org/2000/svg";
   const baseView = { x: 0, y: 0, width: 860, height: 760 };
   let view = { ...baseView };
@@ -89,6 +103,8 @@
   let toastTimer = null;
   let announceTimer = null;
   let mapFeatures = [];
+  let focusAnimation = 0;
+  let lastExpandedState = false;
 
   function escapeHTML(value = "") {
     return String(value)
@@ -549,11 +565,23 @@
     if (mapFeatures.length) buildCountries();
     buildConnections();
     buildMarkers();
+    buildMetroMarkers();
     // Conexiones y nodos por encima de los paises.
     els.networkMap
       .querySelector("#mapViewport")
-      .append(els.countryLayer, els.connectionLayer, els.markerLayer);
+      .append(els.countryLayer, els.connectionLayer, els.markerLayer, els.metroLayer);
     renderMapState(getFilteredCities());
+
+    // Quien llega por enlace directo a una ciudad la encuentra ya centrada;
+    // sin animación, porque no hay un estado previo del que venir.
+    if (openedFromLink && state.selectedId) {
+      const city = cityById.get(state.selectedId);
+      const width = metroByCity.has(city.id) ? 280 : FOCUS_WIDTH;
+      const height = width * (baseView.height / baseView.width);
+      const [x, y] = project([city.lon, city.lat]);
+      view = clampView({ x: x - width / 2, y: y - height / 2, width, height });
+      setViewBoxAndSync();
+    }
   }
 
   // M-02: avisar en vez de dibujar en silencio una ciudad fuera de la region.
@@ -840,6 +868,110 @@
     return ids;
   }
 
+  // El mapa está "acercado" cuando el viewBox baja del umbral; entonces los
+  // grupos metropolitanos se abren y muestran sus comunas.
+  function metrosExpanded() {
+    return view.width <= METRO_EXPAND_WIDTH;
+  }
+
+  // Una comuna se oculta si su área está agrupada y el mapa no está acercado,
+  // salvo que sea la ciudad seleccionada: quien abre una ficha debe ver su nodo.
+  function isCollapsedByMetro(cityId) {
+    const metro = metroByCity.get(cityId);
+    if (!metro || metrosExpanded()) return false;
+    return cityId !== state.selectedId;
+  }
+
+  function buildMetroMarkers() {
+    els.metroLayer.innerHTML = "";
+    metros.forEach(metro => {
+      const [x, y] = project([metro.lon, metro.lat]);
+      const group = createSvg("g", {
+        class: "metro-marker",
+        "data-metro-id": metro.id,
+        role: "button",
+        tabindex: "0",
+        "aria-label": `${metro.name}, ${metro.country}. ${metro.members.length} comunas de la red. Acercar para verlas.`
+      });
+
+      group.append(
+        createSvg("circle", { cx: x, cy: y, r: 24, class: "marker-hit" }),
+        createSvg("circle", { cx: x, cy: y, r: 15, class: "metro-ring", filter: "url(#markerShadow)" }),
+        createSvg("circle", { cx: x, cy: y, r: 9.5, class: "metro-core" })
+      );
+
+      const count = createSvg("text", {
+        x,
+        y: y + 3.4,
+        "text-anchor": "middle",
+        class: "metro-count"
+      });
+      count.textContent = String(metro.members.length);
+      group.appendChild(count);
+
+      const label = createSvg("text", {
+        x: x + 19,
+        y: y + 4,
+        "text-anchor": "start",
+        class: "city-label metro-label"
+      });
+      label.textContent = metro.name;
+      group.appendChild(label);
+
+      const title = createSvg("title");
+      title.textContent = `${metro.name} · ${metro.note}`;
+      group.appendChild(title);
+
+      group.addEventListener("click", event => {
+        event.stopPropagation();
+        if (state.suppressClick) return;
+        expandMetro(metro);
+      });
+      group.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          expandMetro(metro);
+        }
+      });
+      group.addEventListener("pointerenter", event => showMetroTooltip(metro, event));
+      group.addEventListener("pointermove", event => moveTooltip(event));
+      group.addEventListener("pointerleave", hideTooltip);
+
+      els.metroLayer.appendChild(group);
+    });
+  }
+
+  function showMetroTooltip(metro, event) {
+    const memberNames = metro.members
+      .map(id => cityById.get(id)?.name)
+      .filter(Boolean)
+      .join(" · ");
+    els.mapTooltip.innerHTML = `
+      <strong>${escapeHTML(metro.name)}</strong>
+      <span>${escapeHTML(memberNames)}</span>
+      <small>Acercar para abrir el grupo</small>`;
+    els.mapTooltip.hidden = false;
+    moveTooltip(event);
+  }
+
+  // Acercar sobre el grupo lo abre, porque cruza el umbral de expansión.
+  function expandMetro(metro) {
+    hideTooltip();
+    focusMapOn(metro.lon, metro.lat, Math.min(FOCUS_WIDTH, METRO_EXPAND_WIDTH - 40));
+    announce(`${metro.name} abierto: ${metro.members.length} comunas de la red.`);
+  }
+
+  function renderMetroState(visibleIds) {
+    const expanded = metrosExpanded();
+    els.metroLayer.querySelectorAll(".metro-marker").forEach(node => {
+      const metro = metros.find(item => item.id === node.dataset.metroId);
+      const hasVisibleMember = metro.members.some(id => visibleIds.has(id));
+      const selectedInside = metro.members.includes(state.selectedId);
+      node.classList.toggle("is-hidden", expanded || !hasVisibleMember || selectedInside);
+      node.classList.toggle("is-muted", !hasVisibleMember);
+    });
+  }
+
   function renderMapState(filtered) {
     const visibleIds = new Set(filtered.map(city => city.id));
     const selected = state.selectedId ? cityById.get(state.selectedId) : null;
@@ -850,8 +982,11 @@
       marker.classList.toggle("is-selected", id === state.selectedId);
       marker.classList.toggle("is-muted", !visibleIds.has(id));
       marker.classList.toggle("is-related", related.has(id));
+      marker.classList.toggle("is-collapsed", isCollapsedByMetro(id));
       marker.setAttribute("aria-pressed", id === state.selectedId ? "true" : "false");
     });
+
+    renderMetroState(visibleIds);
 
     els.connectionLayer.classList.toggle("is-hidden", !state.connectionsVisible);
     els.connectionLayer.querySelectorAll(".connection-path").forEach(path => {
@@ -1251,7 +1386,7 @@
     return window.innerWidth <= 1120;
   }
 
-  function selectCity(id, { updateHash = true } = {}) {
+  function selectCity(id, { updateHash = true, focusMap = true } = {}) {
     if (!cityById.has(id)) return;
     closeDirectory();
     if (state.selectedId !== id && isOverlayWidth()) state.detailOpener = document.activeElement;
@@ -1260,7 +1395,14 @@
     if (updateHash) replaceCityHash(id);
     applyFilters({ preserveSelection: true });
     hideTooltip();
-    announce(`Ficha de ${cityById.get(id).name} abierta.`);
+
+    // Al seleccionar, el mapa se acerca y centra en la ciudad. Si pertenece a
+    // un área metropolitana, el nivel elegido abre además el grupo.
+    const city = cityById.get(id);
+    if (focusMap) {
+      focusMapOn(city.lon, city.lat, metroByCity.has(id) ? Math.min(FOCUS_WIDTH, 280) : FOCUS_WIDTH);
+    }
+    announce(`Ficha de ${city.name} abierta.`);
 
     const listItem = els.cityList.querySelector(`[data-city-id="${CSS.escape(id)}"]`);
     // A-04: un behavior "smooth" explicito ignora scroll-behavior del CSS.
@@ -1393,6 +1535,62 @@
 
   function setViewBox() {
     els.networkMap.setAttribute("viewBox", `${view.x} ${view.y} ${view.width} ${view.height}`);
+    // El SVG escala todo su contenido con el viewBox, así que al acercar el
+    // texto crecería con el mapa. Esta variable lo contrarresta para que las
+    // etiquetas conserven su tamaño en pantalla a cualquier zoom.
+    els.networkMap.style.setProperty("--map-zoom", (view.width / baseView.width).toFixed(4));
+  }
+
+  // Cambiar el zoom puede cruzar el umbral que abre o cierra los grupos
+  // metropolitanos, así que el estado del mapa se revisa en cada movimiento.
+  function setViewBoxAndSync() {
+    setViewBox();
+    if (metrosExpanded() !== lastExpandedState) {
+      lastExpandedState = metrosExpanded();
+      renderMapState(getFilteredCities());
+    }
+  }
+
+  function prefersReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
+
+  // Desplaza y acerca el mapa hasta dejar un punto centrado. Anima el viewBox
+  // para que no se pierda la referencia de dónde estaba el nodo.
+  function focusMapOn(lon, lat, targetWidth = FOCUS_WIDTH) {
+    const [x, y] = project([lon, lat]);
+    const width = Math.max(250, Math.min(baseView.width, targetWidth));
+    const height = width * (baseView.height / baseView.width);
+    const target = clampView({ x: x - width / 2, y: y - height / 2, width, height });
+
+    // Sin animación si el sistema la desaconseja, o si la pestaña está en
+    // segundo plano: ahí requestAnimationFrame no corre y el mapa se quedaría
+    // a medio camino hasta que alguien volviera a mirarlo.
+    if (prefersReducedMotion() || document.hidden) {
+      view = target;
+      setViewBoxAndSync();
+      return;
+    }
+
+    const from = { ...view };
+    const start = performance.now();
+    const duration = 460;
+    cancelAnimationFrame(focusAnimation);
+
+    const step = now => {
+      const t = Math.min(1, (now - start) / duration);
+      // easeOutCubic: sale rápido y frena al llegar.
+      const eased = 1 - Math.pow(1 - t, 3);
+      view = {
+        x: from.x + (target.x - from.x) * eased,
+        y: from.y + (target.y - from.y) * eased,
+        width: from.width + (target.width - from.width) * eased,
+        height: from.height + (target.height - from.height) * eased
+      };
+      setViewBoxAndSync();
+      if (t < 1) focusAnimation = requestAnimationFrame(step);
+    };
+    focusAnimation = requestAnimationFrame(step);
   }
 
   function clampView(next) {
@@ -1422,12 +1620,13 @@
       width: nextWidth,
       height: nextHeight
     });
-    setViewBox();
+    setViewBoxAndSync();
   }
 
   function resetMap() {
+    cancelAnimationFrame(focusAnimation);
     view = { ...baseView };
-    setViewBox();
+    setViewBoxAndSync();
   }
 
   function updateBackdrop() {
