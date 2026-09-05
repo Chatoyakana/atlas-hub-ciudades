@@ -450,13 +450,13 @@ const rawCities = [
 
 const projectStatuses = ["En curso", "Piloto", "Diseño", "Escalamiento"];
 
-function normalizeProject(project, city, index) {
+function normalizeProject(project, city, index, cityIndex) {
   if (typeof project === "object") return project;
   return {
     title: project,
     description: `${project} articula un piloto local de ${city.themes[index % city.themes.length].toLowerCase()} con potencial de aprendizaje y réplica para otras ciudades del HUB.`,
     source: "demo",
-    status: projectStatuses[(rawCities.indexOf(city) + index) % projectStatuses.length],
+    status: projectStatuses[(cityIndex + index) % projectStatuses.length],
     year: 2025 + (index % 2)
   };
 }
@@ -476,13 +476,13 @@ function initials(name) {
 const hubPeople = window.HUB_PEOPLE || {};
 
 const initiativeNarratives = [
-  (title, theme, cityName) =>
+  ({ title, cityName }) =>
     `Activación breve que pone a prueba ${title.toLowerCase()} con equipos municipales de ${cityName} y cierra con una guía de réplica para la red.`,
-  (title, theme, cityName) =>
+  ({ theme }) =>
     `Convocatoria abierta de ${theme.toLowerCase()} que reúne a vecinas, academia y funcionarios alrededor de un desafío acotado.`,
-  (title, theme, cityName) =>
+  ({ theme }) =>
     `Piloto de bajo costo para medir qué funciona en ${theme.toLowerCase()} antes de comprometer presupuesto de programa.`,
-  (title, theme, cityName) =>
+  ({ theme, cityName }) =>
     `Intercambio entre pares en el que ${cityName} comparte su método de ${theme.toLowerCase()} y recoge aprendizajes de otras ciudades del HUB.`
 ];
 
@@ -528,7 +528,7 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
         source: "demo"
       }
     ],
-    projects: city.projects.map((project, index) => normalizeProject(project, city, index)),
+    projects: city.projects.map((project, index) => normalizeProject(project, city, index, cityIndex)),
     programs: [
       {
         title: city.program,
@@ -540,11 +540,11 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
     ],
     initiatives: city.initiatives.map((title, index) => ({
       title,
-      description: initiativeNarratives[(cityIndex + index) % initiativeNarratives.length](
+      description: initiativeNarratives[(cityIndex + index) % initiativeNarratives.length]({
         title,
-        city.themes[index % city.themes.length],
-        city.name
-      ),
+        theme: city.themes[index % city.themes.length],
+        cityName: city.name
+      }),
       status: ["Activa", "Completada", "En diseño", "Activa"][(cityIndex + index) % 4],
       source: "demo"
     })),
@@ -576,9 +576,98 @@ const HUB_CONNECTIONS = [
   { from: "medellin", to: "guayaquil", theme: "Transformación digital" }
 ];
 
+/*
+ * D-03: entre los datos y la vista no había ninguna comprobación. Una ciudad
+ * sin `themes` rompía el tooltip, una sin `awards` dejaba el porcentaje de
+ * verificación en NaN, y una conexión hacia un identificador inexistente
+ * rompía el trazado de las curvas — todo en silencio.
+ *
+ * El esquema se declara aquí y se valida al cargar. Un registro que no lo
+ * cumple se descarta y queda anotado en HUB_ATLAS.issues, que la interfaz
+ * muestra, en vez de propagarse hasta un error de render.
+ */
+const CITY_SCHEMA = {
+  id: "string",
+  name: "string",
+  country: "string",
+  code: "string",
+  lat: "number",
+  lon: "number",
+  joined: "date",
+  updated: "date",
+  population: "number",
+  area: "number",
+  elevation: "number",
+  summary: "string",
+  themes: "string[]",
+  people: "object[]",
+  institutions: "object[]",
+  projects: "object[]",
+  programs: "object[]",
+  initiatives: "object[]",
+  awards: "object[]"
+};
+
+function checkField(value, kind) {
+  switch (kind) {
+    case "string":
+      return typeof value === "string" && value.trim().length > 0;
+    case "number":
+      return typeof value === "number" && Number.isFinite(value);
+    case "date":
+      return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
+    case "string[]":
+      return Array.isArray(value) && value.length > 0 && value.every(item => typeof item === "string" && item.trim());
+    case "object[]":
+      return Array.isArray(value) && value.every(item => item && typeof item === "object");
+    default:
+      return false;
+  }
+}
+
+function validateAtlas(cities, connections) {
+  const issues = [];
+  const validCities = cities.filter(city => {
+    const missing = Object.entries(CITY_SCHEMA)
+      .filter(([field, kind]) => !checkField(city[field], kind))
+      .map(([field]) => field);
+    if (!missing.length) return true;
+    issues.push(`Ciudad "${city?.id || "sin id"}" descartada; campos inválidos o ausentes: ${missing.join(", ")}.`);
+    return false;
+  });
+
+  const seen = new Set();
+  const uniqueCities = validCities.filter(city => {
+    if (seen.has(city.id)) {
+      issues.push(`Identificador duplicado: "${city.id}". Se conserva la primera aparición.`);
+      return false;
+    }
+    seen.add(city.id);
+    return true;
+  });
+
+  // Las coordenadas fuera de rango reencuadrarían el mapa entero.
+  uniqueCities.forEach(city => {
+    if (Math.abs(city.lat) > 90 || Math.abs(city.lon) > 180) {
+      issues.push(`Coordenadas fuera de rango en "${city.id}": ${city.lat}, ${city.lon}.`);
+    }
+  });
+
+  const validConnections = connections.filter(connection => {
+    const ok = seen.has(connection.from) && seen.has(connection.to);
+    if (!ok) issues.push(`Conexión descartada: ${connection.from} ↔ ${connection.to} apunta a una ciudad inexistente.`);
+    return ok;
+  });
+
+  return { cities: uniqueCities, connections: validConnections, issues };
+}
+
+const validated = validateAtlas(HUB_CITIES, HUB_CONNECTIONS);
+
 window.HUB_ATLAS = {
-  cities: HUB_CITIES,
-  connections: HUB_CONNECTIONS,
+  cities: validated.cities,
+  connections: validated.connections,
+  issues: validated.issues,
   sources: {
     directory: HUB_DIRECTORY_URL,
     home: HUB_HOME_URL,

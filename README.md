@@ -76,6 +76,35 @@ Luego abre `http://localhost:4173`.
 - `data/latam-countries.geojson`: capa cartográfica local.
 - `assets/hub-mark.png`: marca gráfica usada en la cabecera.
 
+## Comprobaciones
+
+El prototipo se sigue sirviendo sin build ni dependencias en tiempo de ejecución.
+Las herramientas son solo de desarrollo:
+
+```bash
+npm install
+npm test        # valida el modelo de datos y los mínimos por ficha
+npm run lint    # ESLint
+```
+
+`npm test` no necesita navegador: carga `data.js` en un contexto mínimo y
+comprueba las invariantes que la interfaz da por supuestas —identificadores
+únicos, conexiones sin extremos huérfanos, países con geometría, procedencia
+declarada en cada registro y los mínimos que promete este README—. La
+integración continua ejecuta ambos en cada `push`.
+
+`npm run format` (Prettier) está disponible pero aún no se ha aplicado al
+código heredado: reformatearlo son unas 3.700 líneas y conviene que vaya en su
+propio commit, no mezclado con cambios de comportamiento. Por eso el CI todavía
+no comprueba formato.
+
+## Validación de datos
+
+`data.js` declara un esquema por ciudad y lo valida al cargar. Un registro que
+no lo cumple se descarta y queda anotado en `HUB_ATLAS.issues`; la interfaz lo
+avisa por consola y con un mensaje, en lugar de propagar el dato hasta un error
+de render. Lo mismo con las conexiones que apuntan a una ciudad inexistente.
+
 ## Próxima fase sugerida
 
 Reemplazar `data.js` por una fuente administrable —CMS, base de datos o Google Sheet— e incorporar por registro: responsable, URL de fuente, fecha de actualización, licencia y estado de verificación.

@@ -41,7 +41,11 @@
     mobileBackdrop: document.getElementById("mobileBackdrop"),
     methodDialog: document.getElementById("methodDialog"),
     toast: document.getElementById("toast"),
-    statusAnnouncer: document.getElementById("statusAnnouncer")
+    statusAnnouncer: document.getElementById("statusAnnouncer"),
+    sortLabel: document.getElementById("sortLabel"),
+    shareFallback: document.getElementById("shareFallback"),
+    shareUrl: document.getElementById("shareUrl"),
+    shareFallbackClose: document.getElementById("shareFallbackClose")
   };
 
   const allThemes = [...new Set(cities.flatMap(city => city.themes))].sort((a, b) => a.localeCompare(b, "es"));
@@ -100,7 +104,7 @@
       program: '<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
       spark: '<path d="m12 3 1.5 4.2L18 9l-4.5 1.8L12 15l-1.5-4.2L6 9l4.5-1.8L12 3Z"/><path d="m18.5 15 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/>',
       people: '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0M14 19a4 4 0 0 1 8 0"/>',
-      population: '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0M14 19a4 4 0 0 1 8 0"/>',
+      population: '<path d="M3 21V9l6-4v4l6-4v16"/><path d="M15 21V11l6 3v7M3 21h18"/><path d="M6 13h1.5M6 17h1.5M11 13h1.5M11 17h1.5"/>',
       area: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/>',
       mountain: '<path d="m3 20 6.5-11 3.3 5 2.4-4L21 20H3Z"/><path d="m7.7 12 1.8 2 1.6-1.9"/>',
       density: '<circle cx="7" cy="7" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 7h6M7 9v6M17 9v6M9 17h6"/>',
@@ -153,7 +157,18 @@
     return city.projects.length + city.programs.length + city.initiatives.length;
   }
 
+  // D-05: antes esto se recalculaba para cada ciudad en cada tecla escrita.
+  const searchIndex = new Map();
+
   function searchableText(city) {
+    const cached = searchIndex.get(city.id);
+    if (cached !== undefined) return cached;
+    const text = buildSearchableText(city);
+    searchIndex.set(city.id, text);
+    return text;
+  }
+
+  function buildSearchableText(city) {
     return normalize([
       city.name,
       city.locality,
@@ -274,6 +289,17 @@
     els.mapSubtitle.textContent = filtered.length
       ? `${filtered.length} ${filtered.length === 1 ? "nodo visible" : "nodos visibles"} · selecciona una ciudad para abrir su ficha`
       : "No hay nodos que coincidan con los filtros";
+  }
+
+  // N-03: antes el control solo alternaba una clase, asi que ni a la vista ni
+  // a un lector de pantalla se podia saber en que orden estaba la lista.
+  function updateSortControl() {
+    const label = state.reverseSort ? "Z–A" : "A–Z";
+    const description = `Ordenar por país, de la ${state.reverseSort ? "Z a la A" : "A a la Z"}`;
+    if (els.sortLabel) els.sortLabel.textContent = label;
+    els.sortButton.setAttribute("aria-pressed", String(state.reverseSort));
+    els.sortButton.setAttribute("aria-label", description);
+    els.sortButton.setAttribute("title", description);
   }
 
   function clearFilters() {
@@ -623,7 +649,7 @@
       let width;
       try {
         width = label.getComputedTextLength() || 0;
-      } catch (_) {
+      } catch {
         width = 0;
       }
       if (!width) width = label.textContent.length * 5.2;
@@ -1097,13 +1123,34 @@
     try {
       if (navigator.share) {
         await navigator.share({ title: `${city.name} · Atlas HUB`, text: `Explora la ficha de ${city.name} en el Atlas HUB.`, url });
-      } else {
-        await navigator.clipboard.writeText(url);
-        showToast("Enlace de la ciudad copiado.");
+        return;
       }
+      // navigator.clipboard solo existe bajo HTTPS o localhost.
+      if (!navigator.clipboard) throw new Error("clipboard no disponible");
+      await navigator.clipboard.writeText(url);
+      showToast("Enlace de la ciudad copiado.");
     } catch (error) {
-      if (error?.name !== "AbortError") showToast("No fue posible compartir; copia la URL del navegador.");
+      if (error?.name === "AbortError") return;
+      // N-05: en vez de pedir al usuario que busque la URL, se la damos ya
+      // seleccionada. Es el caso normal al servir el prototipo por HTTP.
+      showShareFallback(url);
     }
+  }
+
+  function showShareFallback(url) {
+    if (!els.shareFallback) {
+      showToast("No fue posible compartir; copia la URL del navegador.");
+      return;
+    }
+    els.shareUrl.value = url;
+    els.shareFallback.hidden = false;
+    els.shareUrl.focus();
+    els.shareUrl.select();
+    announce("Enlace listo para copiar.");
+  }
+
+  function hideShareFallback() {
+    if (els.shareFallback) els.shareFallback.hidden = true;
   }
 
   function exportCity(city) {
@@ -1283,7 +1330,9 @@
     els.sortButton.addEventListener("click", () => {
       state.reverseSort = !state.reverseSort;
       els.sortButton.classList.toggle("is-reversed", state.reverseSort);
+      updateSortControl();
       applyFilters({ preserveSelection: true });
+      announce(`Lista ordenada por país, ${state.reverseSort ? "de la Z a la A" : "de la A a la Z"}.`);
     });
 
     els.connectionsToggle.addEventListener("click", () => {
@@ -1352,7 +1401,7 @@
       };
       state.suppressClick = false;
       els.networkMap.classList.add("is-dragging");
-      try { els.networkMap.setPointerCapture(event.pointerId); } catch (_) {}
+      try { els.networkMap.setPointerCapture(event.pointerId); } catch {}
     });
 
     els.networkMap.addEventListener("pointermove", event => {
@@ -1396,7 +1445,7 @@
       state.suppressClick = drag.moved;
       drag = null;
       els.networkMap.classList.remove("is-dragging");
-      try { els.networkMap.releasePointerCapture(event.pointerId); } catch (_) {}
+      try { els.networkMap.releasePointerCapture(event.pointerId); } catch {}
       setTimeout(() => { state.suppressClick = false; }, 0);
     };
     els.networkMap.addEventListener("pointerup", endDrag);
@@ -1405,6 +1454,8 @@
     els.openFiltersButton.addEventListener("click", openFilters);
     els.mobileResultsButton.addEventListener("click", openFilters);
     els.closeFiltersButton.addEventListener("click", closeFilters);
+    els.shareFallbackClose?.addEventListener("click", hideShareFallback);
+
     els.mobileBackdrop.addEventListener("click", () => {
       closeFilters();
       if (isOverlayWidth() && state.selectedId) closeDetail();
@@ -1445,7 +1496,8 @@
         else els.citySearch.focus();
       }
       if (event.key === "Escape") {
-        if (els.explorerPanel.classList.contains("is-open")) closeFilters();
+        if (els.shareFallback && !els.shareFallback.hidden) hideShareFallback();
+        else if (els.explorerPanel.classList.contains("is-open")) closeFilters();
         else if (isOverlayWidth() && state.selectedId) closeDetail();
       }
     });
@@ -1462,9 +1514,25 @@
     });
   }
 
+  // D-03: si el validador descartó registros, se dice; antes un dato mal
+  // formado se propagaba en silencio hasta un error de render.
+  function reportDataIssues() {
+    const issues = atlas.issues || [];
+    if (!issues.length) return;
+    console.warn(`Atlas HUB · ${issues.length} registro(s) descartado(s) al validar:`);
+    issues.forEach(issue => console.warn(` · ${issue}`));
+    showToast(
+      issues.length === 1
+        ? "Se descartó 1 registro con datos incompletos; revisa la consola."
+        : `Se descartaron ${issues.length} registros con datos incompletos; revisa la consola.`
+    );
+  }
+
   function init() {
+    reportDataIssues();
     populateFilters();
     updateKpis();
+    updateSortControl();
     wireEvents();
     buildMap();
     applyFilters({ preserveSelection: true });

@@ -7,6 +7,15 @@
   <meta name="description" content="Prototipo de exploración cartográfica de la red del HUB de Ciudades de América Latina y el Caribe." />
   <title>Atlas de conocimiento · HUB de Ciudades</title>
   <link rel="icon" href="assets/hub-mark.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Atlas HUB de Ciudades" />
+  <meta property="og:title" content="Atlas de conocimiento · HUB de Ciudades" />
+  <meta property="og:description" content="Mapa navegable de la red del HUB de Ciudades de América Latina y el Caribe: 17 ciudades en 10 países, sus personas, instituciones y acciones." />
+  <meta property="og:image" content="assets/hub-mark.png" />
+  <meta property="og:locale" content="es_ES" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Atlas de conocimiento · HUB de Ciudades" />
+  <meta name="twitter:description" content="Mapa navegable de la red del HUB de Ciudades de América Latina y el Caribe." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -51,10 +60,10 @@
       <p>Explora quiénes hacen la red, qué están probando y dónde están sus capacidades.</p>
     </div>
     <div class="network-kpis" aria-label="Resumen de la red">
-      <div class="kpi"><strong id="kpiCities">17</strong><span>ciudades</span></div>
-      <div class="kpi"><strong id="kpiCountries">10</strong><span>países</span></div>
-      <div class="kpi"><strong id="kpiActors">51</strong><span>personas</span></div>
-      <div class="kpi kpi--accent"><strong id="kpiActions">119</strong><span>acciones</span></div>
+      <div class="kpi"><strong id="kpiCities">—</strong><span>ciudades</span></div>
+      <div class="kpi"><strong id="kpiCountries">—</strong><span>países</span></div>
+      <div class="kpi"><strong id="kpiActors">—</strong><span>personas</span></div>
+      <div class="kpi kpi--accent"><strong id="kpiActions">—</strong><span>acciones</span></div>
     </div>
   </section>
 
@@ -97,8 +106,9 @@
           <strong>Ciudades de la red</strong>
           <span id="resultsLabel">17 resultados</span>
         </div>
-        <button class="sort-button" id="sortButton" type="button" aria-label="Cambiar orden" title="Cambiar orden">
+        <button class="sort-button" id="sortButton" type="button" aria-pressed="false" aria-label="Ordenar por país, de la A a la Z" title="Ordenar por país, de la A a la Z">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h8M8 18h4M4 5v14M2 17l2 2 2-2"/></svg>
+          <span class="sort-button__text" id="sortLabel">A–Z</span>
         </button>
       </div>
 
@@ -196,6 +206,11 @@
   <p class="visually-hidden" id="statusAnnouncer" role="status" aria-live="polite"></p>
   <div class="mobile-backdrop" id="mobileBackdrop" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="share-fallback" id="shareFallback" hidden>
+    <label for="shareUrl">Copia el enlace de esta ciudad</label>
+    <input id="shareUrl" type="text" readonly />
+    <button type="button" id="shareFallbackClose" aria-label="Cerrar">Cerrar</button>
+  </div>
 
   <dialog class="method-dialog" id="methodDialog">
     <form method="dialog" class="dialog-card">
