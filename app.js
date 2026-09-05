@@ -285,14 +285,91 @@
     applyFilters({ preserveSelection: true });
   }
 
-  function project([lon, lat]) {
-    const minLon = -119;
-    const maxLon = -32;
-    const minLat = -57;
-    const maxLat = 33;
-    const x = 43 + ((lon - minLon) / (maxLon - minLon)) * 774;
-    const y = 27 + ((maxLat - lat) / (maxLat - minLat)) * 703;
-    return [x, y];
+  // M-02: antes se mapeaba lon/lat al lienzo con una regla de tres sobre una
+  // caja fija. Eso estiraba el area hacia los extremos y dejaba fuera, sin
+  // aviso, cualquier coordenada ajena al encuadre codificado a mano.
+  //
+  // Lambert azimutal equiareal: conserva las areas relativas y se comporta bien
+  // en una region compacta que cruza el ecuador, como America Latina y el
+  // Caribe. Se implementa aqui —son doce lineas de trigonometria— para no
+  // introducir la primera dependencia del proyecto.
+  const PROJECTION_CENTER = { lon: -74, lat: -9 };
+  const DEG = Math.PI / 180;
+  const VIEW_PADDING = 26;
+
+  function laea([lon, lat]) {
+    const lon0 = PROJECTION_CENTER.lon * DEG;
+    const lat0 = PROJECTION_CENTER.lat * DEG;
+    const phi = lat * DEG;
+    const dLambda = lon * DEG - lon0;
+    const denominator = 1 + Math.sin(lat0) * Math.sin(phi) + Math.cos(lat0) * Math.cos(phi) * Math.cos(dLambda);
+    const k = Math.sqrt(2 / Math.max(denominator, 1e-9));
+    return [
+      k * Math.cos(phi) * Math.sin(dLambda),
+      k * (Math.cos(lat0) * Math.sin(phi) - Math.sin(lat0) * Math.cos(phi) * Math.cos(dLambda))
+    ];
+  }
+
+  // El encuadre se deriva de lo que hay que dibujar, no de constantes: asi una
+  // ciudad o una geometria nuevas reencuadran el mapa en vez de salirse de el.
+  // El lienzo se recorta al contenido —America Latina proyectada a area igual
+  // es mas alta que ancha— para que el SVG no reserve franjas vacias a los
+  // lados; preserveAspectRatio ya lo centra dentro de su contenedor.
+  const MAX_CANVAS = { width: 860, height: 760 };
+
+  function computeFit(coordinates) {
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    coordinates.forEach(coordinate => {
+      const [x, y] = laea(coordinate);
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    });
+    const spanX = Math.max(maxX - minX, 1e-9);
+    const spanY = Math.max(maxY - minY, 1e-9);
+    const scale = Math.min(
+      (MAX_CANVAS.width - VIEW_PADDING * 2) / spanX,
+      (MAX_CANVAS.height - VIEW_PADDING * 2) / spanY
+    );
+    return {
+      scale,
+      canvasWidth: Math.round(spanX * scale + VIEW_PADDING * 2),
+      canvasHeight: Math.round(spanY * scale + VIEW_PADDING * 2),
+      tx: VIEW_PADDING - minX * scale,
+      // La y de la proyeccion crece hacia el norte y la del SVG hacia abajo.
+      ty: VIEW_PADDING + maxY * scale
+    };
+  }
+
+  function applyFit(nextFit) {
+    fit = nextFit;
+    baseView.width = nextFit.canvasWidth;
+    baseView.height = nextFit.canvasHeight;
+    view = { ...baseView };
+    setViewBox();
+  }
+
+  function collectCoordinates(features) {
+    const coordinates = cities.map(city => [city.lon, city.lat]);
+    features.forEach(feature => {
+      const polygons = feature.geometry.type === "Polygon"
+        ? [feature.geometry.coordinates]
+        : feature.geometry.coordinates;
+      polygons.forEach(polygon => polygon.forEach(ring => ring.forEach(coordinate => {
+        coordinates.push(coordinate);
+      })));
+    });
+    return coordinates;
+  }
+
+  // Encuadre provisional con las ciudades, sustituido en cuanto llega la
+  // geometria; garantiza que project() nunca se llame sin un fit valido.
+  let fit = computeFit(cities.map(city => [city.lon, city.lat]));
+
+  function project(coordinate) {
+    const [x, y] = laea(coordinate);
+    return [fit.tx + x * fit.scale, fit.ty - y * fit.scale];
   }
 
   // Dos nodos que caen a menos de CLUSTER_GAP px son indistinguibles a esta escala
@@ -350,7 +427,7 @@
     return offsets;
   }
 
-  const markerOffsets = computeMarkerOffsets();
+  let markerOffsets = computeMarkerOffsets();
 
   function markerPosition(city) {
     const [x, y] = project([city.lon, city.lat]);
@@ -372,22 +449,53 @@
     return node;
   }
 
+  // M-02: la geometria se carga antes de dibujar porque el encuadre se calcula
+  // a partir de ella. Si falla, se encuadra solo con las ciudades y el mapa
+  // sigue siendo utilizable.
   async function buildMap() {
-    buildConnections();
-    buildMarkers();
-
     try {
       const response = await fetch("data/latam-countries.geojson");
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const geojson = await response.json();
       mapFeatures = geojson.features;
-      buildCountries();
-      // Keep connections and nodes visually above countries after the async fetch.
-      els.networkMap.querySelector("#mapViewport").append(els.countryLayer, els.connectionLayer, els.markerLayer);
-      renderMapState(getFilteredCities());
     } catch (error) {
       console.warn("No fue posible cargar la capa cartográfica:", error);
       showToast("La capa de países no pudo cargarse; los nodos siguen disponibles.");
+    }
+
+    applyFit(computeFit(collectCoordinates(mapFeatures)));
+    warnAboutStrayCities();
+    markerOffsets = computeMarkerOffsets();
+
+    if (mapFeatures.length) buildCountries();
+    buildConnections();
+    buildMarkers();
+    // Conexiones y nodos por encima de los paises.
+    els.networkMap.querySelector("#mapViewport").append(els.countryLayer, els.connectionLayer, els.markerLayer);
+    renderMapState(getFilteredCities());
+  }
+
+  // M-02: avisar en vez de dibujar en silencio una ciudad fuera de la region.
+  function warnAboutStrayCities() {
+    if (!mapFeatures.length) return;
+    let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+    mapFeatures.forEach(feature => {
+      const box = feature.bbox;
+      if (!box) return;
+      minLon = Math.min(minLon, box[0]);
+      minLat = Math.min(minLat, box[1]);
+      maxLon = Math.max(maxLon, box[2]);
+      maxLat = Math.max(maxLat, box[3]);
+    });
+    if (!Number.isFinite(minLon)) return;
+    const stray = cities.filter(city =>
+      city.lon < minLon || city.lon > maxLon || city.lat < minLat || city.lat > maxLat
+    );
+    if (stray.length) {
+      console.warn(
+        "Ciudades fuera de la región cartografiada; el mapa se reencuadró para incluirlas:",
+        stray.map(city => `${city.name} (${city.lat}, ${city.lon})`).join(", ")
+      );
     }
   }
 
@@ -1072,14 +1180,15 @@
     return next;
   }
 
-  function zoomMap(factor, clientPoint = null) {
+  function zoomMap(factor, clientPoint = null, referenceWidth = null) {
     const rect = els.networkMap.getBoundingClientRect();
     const px = clientPoint ? (clientPoint.x - rect.left) / rect.width : 0.5;
     const py = clientPoint ? (clientPoint.y - rect.top) / rect.height : 0.5;
     const focusX = view.x + px * view.width;
     const focusY = view.y + py * view.height;
-    const nextWidth = view.width * factor;
-    const nextHeight = view.height * factor;
+    const base = referenceWidth ?? view.width;
+    const nextWidth = base * factor;
+    const nextHeight = nextWidth * (view.height / view.width);
     view = clampView({
       x: focusX - px * nextWidth,
       y: focusY - py * nextHeight,
@@ -1193,12 +1302,46 @@
       showToast("Mapa y filtros restablecidos.");
     });
 
+    // M-04: capturar la rueda siempre es una trampa latente. Si el documento
+    // desborda la ventana, el zoom exige Ctrl/Cmd y el scroll normal pasa.
     els.networkMap.addEventListener("wheel", event => {
+      const pageScrolls = document.documentElement.scrollHeight > window.innerHeight + 1;
+      if (pageScrolls && !event.ctrlKey && !event.metaKey) return;
       event.preventDefault();
       zoomMap(event.deltaY > 0 ? 1.12 : 0.89, { x: event.clientX, y: event.clientY });
     }, { passive: false });
 
+    // M-03: el SVG lleva touch-action: none, asi que el pellizco nativo esta
+    // desactivado y hay que reconstruirlo. Con dos punteros activos, la escala
+    // sale de como cambia la distancia entre ellos y el centro de zoom de su
+    // punto medio; con uno, se conserva el arrastre de siempre.
+    const activePointers = new Map();
+    let pinch = null;
+
+    function pointerPair() {
+      const points = [...activePointers.values()];
+      return points.length === 2 ? points : null;
+    }
+
+    function beginPinch(pair) {
+      drag = null;
+      els.networkMap.classList.remove("is-dragging");
+      pinch = {
+        startDistance: Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y) || 1,
+        startWidth: view.width,
+        moved: false
+      };
+    }
+
     els.networkMap.addEventListener("pointerdown", event => {
+      if (event.pointerType !== "mouse") {
+        activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        const pair = pointerPair();
+        if (pair) {
+          beginPinch(pair);
+          return;
+        }
+      }
       if (event.button !== 0 || event.target.closest(".city-marker")) return;
       drag = {
         startX: event.clientX,
@@ -1209,10 +1352,25 @@
       };
       state.suppressClick = false;
       els.networkMap.classList.add("is-dragging");
-      els.networkMap.setPointerCapture(event.pointerId);
+      try { els.networkMap.setPointerCapture(event.pointerId); } catch (_) {}
     });
 
     els.networkMap.addEventListener("pointermove", event => {
+      if (activePointers.has(event.pointerId)) {
+        activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      }
+      const pair = pointerPair();
+      if (pair) {
+        if (!pinch) beginPinch(pair);
+        const distance = Math.hypot(pair[0].x - pair[1].x, pair[0].y - pair[1].y) || 1;
+        if (Math.abs(distance - pinch.startDistance) > 6) pinch.moved = true;
+        zoomMap(
+          pinch.startDistance / distance,
+          { x: (pair[0].x + pair[1].x) / 2, y: (pair[0].y + pair[1].y) / 2 },
+          pinch.startWidth
+        );
+        return;
+      }
       if (!drag) return;
       const rect = els.networkMap.getBoundingClientRect();
       const dx = ((event.clientX - drag.startX) / rect.width) * view.width;
@@ -1223,6 +1381,17 @@
     });
 
     const endDrag = event => {
+      activePointers.delete(event.pointerId);
+      if (pinch) {
+        // Al levantar un dedo se cierra el gesto; el que queda no debe
+        // interpretarse como el inicio de un arrastre ni como un toque.
+        if (activePointers.size < 2) {
+          state.suppressClick = pinch.moved;
+          pinch = null;
+          if (state.suppressClick) setTimeout(() => { state.suppressClick = false; }, 0);
+        }
+        return;
+      }
       if (!drag) return;
       state.suppressClick = drag.moved;
       drag = null;
