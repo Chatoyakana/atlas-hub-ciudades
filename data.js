@@ -42,7 +42,6 @@ const rawCities = [
     code: "CL",
     lat: -33.4314,
     lon: -70.6093,
-    markerOffset: [11, -24],
     joined: "2023-08-22",
     population: 157749,
     area: 14.4,
@@ -133,7 +132,6 @@ const rawCities = [
     code: "CL",
     lat: -33.4064,
     lon: -70.7273,
-    markerOffset: [-24, -7],
     joined: "2023-08-22",
     population: 160847,
     area: 24.2,
@@ -170,7 +168,6 @@ const rawCities = [
     code: "MX",
     lat: 14.9056,
     lon: -92.2634,
-    markerOffset: [8, 8],
     joined: "2024-05-17",
     population: 353706,
     area: 303,
@@ -407,7 +404,6 @@ const rawCities = [
     code: "CL",
     lat: -33.4569,
     lon: -70.5978,
-    markerOffset: [25, 13],
     joined: "2024-03-14",
     population: 250192,
     area: 16.9,
@@ -534,6 +530,24 @@ function initials(name) {
     .toUpperCase();
 }
 
+const initiativeNarratives = [
+  (title, theme, cityName) =>
+    `Activación breve que pone a prueba ${title.toLowerCase()} con equipos municipales de ${cityName} y cierra con una guía de réplica para la red.`,
+  (title, theme, cityName) =>
+    `Convocatoria abierta de ${theme.toLowerCase()} que reúne a vecinas, academia y funcionarios alrededor de un desafío acotado.`,
+  (title, theme, cityName) =>
+    `Piloto de bajo costo para medir qué funciona en ${theme.toLowerCase()} antes de comprometer presupuesto de programa.`,
+  (title, theme, cityName) =>
+    `Intercambio entre pares en el que ${cityName} comparte su método de ${theme.toLowerCase()} y recoge aprendizajes de otras ciudades del HUB.`
+];
+
+const awardBodies = [
+  "Reconocimiento de demostración · red HUB",
+  "Jurado de pares de la red (demostración)",
+  "Mención de la asamblea anual (demostración)",
+  "Comité regional de aprendizajes (demostración)"
+];
+
 const HUB_CITIES = rawCities.map((city, cityIndex) => {
   const people = [
     ...city.officialPeople.map(person => ({
@@ -580,7 +594,11 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
     ],
     initiatives: city.initiatives.map((title, index) => ({
       title,
-      description: `Iniciativa local de corta duración para activar capacidades, medir aprendizajes y compartir una guía de réplica.`,
+      description: initiativeNarratives[(cityIndex + index) % initiativeNarratives.length](
+        title,
+        city.themes[index % city.themes.length],
+        city.name
+      ),
       status: ["Activa", "Completada", "En diseño", "Activa"][(cityIndex + index) % 4],
       source: "demo"
     })),
@@ -588,7 +606,7 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
       {
         title: city.award,
         year: cityIndex % 4 === 0 ? 2024 : 2025,
-        organization: "Reconocimiento de demostración para el prototipo",
+        organization: awardBodies[cityIndex % awardBodies.length],
         source: "demo"
       }
     ],

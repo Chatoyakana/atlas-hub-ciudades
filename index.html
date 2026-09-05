@@ -20,7 +20,7 @@
     </a>
 
     <nav class="main-nav" aria-label="Navegación principal">
-      <button class="nav-item nav-item--active" type="button" data-nav="mapa">
+      <button class="nav-item nav-item--active" type="button" data-nav="mapa" aria-current="page">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>
         Mapa
       </button>
@@ -102,7 +102,7 @@
         </button>
       </div>
 
-      <div class="city-list" id="cityList" role="listbox" aria-label="Ciudades filtradas"></div>
+      <div class="city-list" id="cityList" role="group" aria-label="Ciudades filtradas"></div>
       <div class="source-strip">
         <span class="source-dot source-dot--hub"></span> Verificado en HUB
         <span class="source-dot source-dot--demo"></span> Contenido demo

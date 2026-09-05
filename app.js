@@ -221,7 +221,7 @@
     }
 
     els.cityList.innerHTML = filtered.map(city => `
-      <button class="city-item ${state.selectedId === city.id ? "is-selected" : ""}" type="button" data-city-id="${city.id}" role="option" aria-selected="${state.selectedId === city.id}">
+      <button class="city-item ${state.selectedId === city.id ? "is-selected" : ""}" type="button" data-city-id="${escapeHTML(city.id)}"${state.selectedId === city.id ? ' aria-current="true"' : ""}>
         <span class="city-item__marker">${escapeHTML(city.code)}</span>
         <span class="city-item__copy">
           <strong>${escapeHTML(city.name)}</strong>
@@ -291,9 +291,66 @@
     return [x, y];
   }
 
+  // Dos nodos que caen a menos de CLUSTER_GAP px son indistinguibles a esta escala
+  // (las tres comunas de Santiago quedan a ~1 px entre si), asi que el grupo se
+  // despliega en abanico con linea guia en vez de calibrar cada offset a mano.
+  const CLUSTER_GAP = 15;
+  const SPREAD_RADIUS = 27;
+
+  function computeMarkerOffsets() {
+    const base = cities.map(city => {
+      const [x, y] = project([city.lon, city.lat]);
+      return { id: city.id, x, y };
+    });
+
+    const parent = base.map((_, index) => index);
+    const find = index => (parent[index] === index ? index : (parent[index] = find(parent[index])));
+    for (let i = 0; i < base.length; i++) {
+      for (let j = i + 1; j < base.length; j++) {
+        if (Math.hypot(base[i].x - base[j].x, base[i].y - base[j].y) >= CLUSTER_GAP) continue;
+        const rootI = find(i);
+        const rootJ = find(j);
+        if (rootI !== rootJ) parent[rootJ] = rootI;
+      }
+    }
+
+    const groups = new Map();
+    base.forEach((_, index) => {
+      const root = find(index);
+      if (!groups.has(root)) groups.set(root, []);
+      groups.get(root).push(index);
+    });
+
+    const offsets = new Map();
+    groups.forEach(members => {
+      if (members.length === 1) {
+        offsets.set(base[members[0]].id, [0, 0]);
+        return;
+      }
+      const cx = members.reduce((sum, index) => sum + base[index].x, 0) / members.length;
+      const cy = members.reduce((sum, index) => sum + base[index].y, 0) / members.length;
+      // Ordenar por angulo real conserva la disposicion geografica dentro del abanico.
+      const ordered = [...members].sort((a, b) =>
+        Math.atan2(base[a].y - cy, base[a].x - cx) - Math.atan2(base[b].y - cy, base[b].x - cx) ||
+        base[a].id.localeCompare(base[b].id)
+      );
+      const radius = SPREAD_RADIUS + (ordered.length - 2) * 6;
+      ordered.forEach((index, position) => {
+        const angle = -Math.PI / 2 + (position / ordered.length) * Math.PI * 2;
+        offsets.set(base[index].id, [
+          cx + Math.cos(angle) * radius - base[index].x,
+          cy + Math.sin(angle) * radius - base[index].y
+        ]);
+      });
+    });
+    return offsets;
+  }
+
+  const markerOffsets = computeMarkerOffsets();
+
   function markerPosition(city) {
     const [x, y] = project([city.lon, city.lat]);
-    const [dx, dy] = city.markerOffset || [0, 0];
+    const [dx, dy] = markerOffsets.get(city.id) || [0, 0];
     return { anchorX: x, anchorY: y, x: x + dx, y: y + dy };
   }
 
@@ -394,23 +451,84 @@
     });
   }
 
-  function labelPlacement(city) {
-    const custom = {
-      medellin: { dx: -12, dy: -7, anchor: "end" },
-      bogota: { dx: 12, dy: 13, anchor: "start" },
-      quito: { dx: 12, dy: -7, anchor: "start" },
-      guayaquil: { dx: -12, dy: 4, anchor: "end" },
-      "ciudad-guatemala": { dx: 12, dy: -8, anchor: "start" },
-      "tuxtla-gutierrez": { dx: -12, dy: -5, anchor: "end" },
-      tapachula: { dx: 12, dy: 13, anchor: "start" },
-      providencia: { dx: 12, dy: -2, anchor: "start" },
-      renca: { dx: -12, dy: 2, anchor: "end" },
-      nunoa: { dx: 12, dy: 12, anchor: "start" },
-      cordoba: { dx: 12, dy: -7, anchor: "start" },
-      mendoza: { dx: -12, dy: 7, anchor: "end" },
-      montevideo: { dx: 12, dy: 5, anchor: "start" }
-    };
-    return custom[city.id] || { dx: 12, dy: 4, anchor: "start" };
+  // Posiciones candidatas alrededor del nodo, de la mas legible a la menos.
+  const LABEL_CANDIDATES = [
+    { dx: 15, dy: 4, anchor: "start" },
+    { dx: -15, dy: 4, anchor: "end" },
+    { dx: 15, dy: -10, anchor: "start" },
+    { dx: -15, dy: -10, anchor: "end" },
+    { dx: 15, dy: 17, anchor: "start" },
+    { dx: -15, dy: 17, anchor: "end" },
+    { dx: 0, dy: -15, anchor: "middle" },
+    { dx: 0, dy: 23, anchor: "middle" }
+  ];
+  const LABEL_HEIGHT = 11;
+  const NODE_RADIUS = 11.5;
+
+  function overlapArea(a, b) {
+    const width = Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1);
+    const height = Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1);
+    return width > 0 && height > 0 ? width * height : 0;
+  }
+
+  function labelBox(pos, candidate, width) {
+    const x = pos.x + candidate.dx;
+    const y = pos.y + candidate.dy;
+    const left = candidate.anchor === "start" ? x
+      : candidate.anchor === "end" ? x - width
+      : x - width / 2;
+    return { x1: left - 2, y1: y - LABEL_HEIGHT, x2: left + width + 2, y2: y + 3 };
+  }
+
+  function labelCost(box, placed, nodes) {
+    let cost = 0;
+    if (box.x1 < 2 || box.x2 > baseView.width - 2 || box.y1 < 2 || box.y2 > baseView.height - 2) {
+      cost += 400;
+    }
+    // Chocar con otra etiqueta se penaliza mas que rozar un nodo: dos textos
+    // superpuestos son ilegibles, un texto sobre un circulo todavia se lee.
+    placed.forEach(other => { cost += overlapArea(box, other) * 3; });
+    nodes.forEach(node => { cost += overlapArea(box, node); });
+    return cost;
+  }
+
+  // Coloca las etiquetas evitando cajas ya ocupadas. Las ciudades con mas
+  // acciones eligen primero, de modo que las densas conservan la mejor posicion.
+  function layoutLabels() {
+    const nodes = cities.map(city => {
+      const pos = markerPosition(city);
+      return { x1: pos.x - NODE_RADIUS, y1: pos.y - NODE_RADIUS, x2: pos.x + NODE_RADIUS, y2: pos.y + NODE_RADIUS };
+    });
+    const placed = [];
+    const order = [...cities].sort((a, b) =>
+      actionCount(b) - actionCount(a) || a.name.localeCompare(b.name, "es")
+    );
+
+    order.forEach(city => {
+      const label = els.markerLayer.querySelector(`[data-marker-id="${CSS.escape(city.id)}"] .city-label`);
+      if (!label) return;
+      const pos = markerPosition(city);
+      let width;
+      try {
+        width = label.getComputedTextLength() || 0;
+      } catch (_) {
+        width = 0;
+      }
+      if (!width) width = label.textContent.length * 5.2;
+
+      let best = null;
+      for (const candidate of LABEL_CANDIDATES) {
+        const box = labelBox(pos, candidate, width);
+        const cost = labelCost(box, placed, nodes);
+        if (!best || cost < best.cost) best = { candidate, box, cost };
+        if (cost === 0) break;
+      }
+
+      label.setAttribute("x", (pos.x + best.candidate.dx).toFixed(1));
+      label.setAttribute("y", (pos.y + best.candidate.dy).toFixed(1));
+      label.setAttribute("text-anchor", best.candidate.anchor);
+      placed.push(best.box);
+    });
   }
 
   function buildMarkers() {
@@ -425,7 +543,7 @@
         "aria-label": `${city.name}, ${city.country}. ${city.people.length} personas y ${actionCount(city)} acciones.`
       });
 
-      if (city.markerOffset) {
+      if (Math.abs(pos.x - pos.anchorX) > 0.5 || Math.abs(pos.y - pos.anchorY) > 0.5) {
         group.appendChild(createSvg("line", {
           x1: pos.anchorX.toFixed(1),
           y1: pos.anchorY.toFixed(1),
@@ -443,13 +561,7 @@
         createSvg("circle", { cx: pos.x, cy: pos.y, r: 1.8, class: "marker-center" })
       );
 
-      const placement = labelPlacement(city);
-      const label = createSvg("text", {
-        x: pos.x + placement.dx,
-        y: pos.y + placement.dy,
-        "text-anchor": placement.anchor,
-        class: "city-label"
-      });
+      const label = createSvg("text", { x: pos.x, y: pos.y, class: "city-label" });
       label.textContent = city.name.replace(" Capital", "");
       group.appendChild(label);
 
@@ -472,6 +584,10 @@
 
       els.markerLayer.appendChild(group);
     });
+
+    layoutLabels();
+    // Las metricas de texto cambian cuando termina de cargar la tipografia.
+    document.fonts?.ready.then(layoutLabels);
   }
 
   function showTooltip(city, event, fromKeyboard = false) {
@@ -636,7 +752,7 @@
         <div class="collaboration-card__top"><span>${icon("network")}</span><strong>Conexiones de conocimiento</strong></div>
         <p>${related.length ? `${city.name} comparte temas y aprendizajes con ${related.length} ${related.length === 1 ? "ciudad" : "ciudades"} del mapa.` : "Aún no se han modelado conexiones directas para esta ciudad."}</p>
         <div class="related-cities">
-          ${related.map(item => `<button class="related-city-button" type="button" data-related-city="${item.id}">${escapeHTML(item.name)}</button>`).join("")}
+          ${related.map(item => `<button class="related-city-button" type="button" data-related-city="${escapeHTML(item.id)}">${escapeHTML(item.name)}</button>`).join("")}
         </div>
       </div>`;
   }
@@ -953,6 +1069,15 @@
     els.mobileBackdrop.hidden = !(filtersOpen || detailsOpen);
   }
 
+  function setActiveNav(navId) {
+    document.querySelectorAll(".main-nav [data-nav]").forEach(button => {
+      const isActive = button.dataset.nav === navId;
+      button.classList.toggle("nav-item--active", isActive);
+      if (isActive) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
+  }
+
   function openFilters() {
     els.explorerPanel.classList.add("is-open");
     updateBackdrop();
@@ -1071,15 +1196,18 @@
       renderMapState(getFilteredCities());
     });
 
-    document.querySelector("[data-nav='mapa']")?.addEventListener("click", () => {
-      resetMap();
-      closeFilters();
-      showToast("Vista cartográfica activa.");
-    });
-
-    document.querySelector("[data-nav='directorio']")?.addEventListener("click", () => {
-      if (window.innerWidth <= 700) openFilters();
-      else els.citySearch.focus();
+    document.querySelector(".main-nav")?.addEventListener("click", event => {
+      const button = event.target.closest("[data-nav]");
+      if (!button) return;
+      setActiveNav(button.dataset.nav);
+      if (button.dataset.nav === "mapa") {
+        resetMap();
+        closeFilters();
+        showToast("Vista cartográfica activa.");
+      } else if (button.dataset.nav === "directorio") {
+        if (window.innerWidth <= 700) openFilters();
+        else els.citySearch.focus();
+      }
     });
 
     document.addEventListener("keydown", event => {
