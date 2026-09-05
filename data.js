@@ -525,6 +525,167 @@ const awardBodies = [
   "Comité regional de aprendizajes (demostración)"
 ];
 
+/*
+ * Detalle por entidad.
+ *
+ * Cada persona, institución, proyecto, programa, iniciativa y premio recibe un
+ * identificador estable y una ficha propia, para que el atlas pueda abrirlos.
+ *
+ * REGLA: sobre las personas del directorio del HUB —personas reales— no se
+ * inventa nada. Su ficha muestra solo lo que el directorio publica: nombre,
+ * cargo, institución y enlace a la fuente. Las biografías, trayectorias y
+ * contactos se generan únicamente para las personas de demostración, que son
+ * sintéticas. Atribuir a alguien real una formación o un correo inventados
+ * sería fabricar datos personales, por muy visible que fuera el sello "Demo".
+ */
+function slugify(value) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+const personBios = [
+  ({ theme, cityName }) =>
+    `Acompaña a los equipos de ${cityName} en ${theme.toLowerCase()}, traduciendo pilotos en procedimientos que el municipio pueda sostener.`,
+  ({ theme }) =>
+    `Trabaja en la frontera entre el área técnica y la política pública: lleva evidencia de ${theme.toLowerCase()} a las mesas donde se decide el presupuesto.`,
+  ({ theme }) =>
+    `Coordina el trabajo con vecinos, universidades y empresas alrededor de ${theme.toLowerCase()}, y documenta lo aprendido para el resto de la red.`,
+  ({ theme, cityName }) =>
+    `Diseña y mide las pruebas de ${theme.toLowerCase()} de ${cityName}, con foco en que los resultados sean replicables en otras ciudades.`
+];
+
+const personEducation = [
+  "Administración pública · especialización en gestión urbana",
+  "Ingeniería civil · maestría en planificación territorial",
+  "Ciencias políticas · posgrado en políticas públicas",
+  "Diseño · maestría en innovación de servicios",
+  "Economía · especialización en evaluación de impacto",
+  "Arquitectura · maestría en urbanismo"
+];
+
+const projectMilestones = [
+  ["Diagnóstico y línea base", "Prueba en terreno", "Medición de resultados", "Guía de réplica"],
+  ["Mapeo de actores", "Prototipo con vecinos", "Ajuste del modelo", "Transferencia al municipio"],
+  ["Revisión normativa", "Piloto acotado", "Evaluación externa", "Escalamiento por etapas"]
+];
+
+const partnerPool = [
+  "Universidad pública local",
+  "Cámara de comercio",
+  "Colectivo vecinal",
+  "Agencia de cooperación regional",
+  "Empresa de servicios públicos",
+  "Organización de sociedad civil",
+  "Instituto de estadística municipal"
+];
+
+function personDetail(person, city, index) {
+  // Personas reales: solo lo publicado, sin añadidos.
+  if (person.source === "hub") {
+    return {
+      kind: "hub",
+      note: "Registro publicado en el directorio del HUB. El atlas no añade datos personales a las personas reales de la red."
+    };
+  }
+  const theme = city.themes[index % city.themes.length];
+  return {
+    kind: "demo",
+    bio: personBios[index % personBios.length]({ theme, cityName: city.name }),
+    focus: [theme, city.themes[(index + 1) % city.themes.length]],
+    since: 2019 + (index % 5),
+    education: personEducation[(index + city.name.length) % personEducation.length],
+    contact: `${slugify(person.name)}@demo.hubdeciudades.test`
+  };
+}
+
+function institutionDetail(institution, city, index) {
+  const theme = city.themes[index % city.themes.length];
+  return {
+    founded: index === 0 ? 1990 + (city.name.length % 25) : 2016 + (index % 6),
+    teamSize: 8 + ((city.name.length + index * 5) % 40),
+    lines: [
+      `${theme} aplicada a servicios municipales`,
+      "Formación de equipos públicos",
+      index === 0 ? "Enlace con la red del HUB" : "Articulación con academia y sector privado"
+    ],
+    reach:
+      index === 0
+        ? `Cobertura municipal en ${city.name}.`
+        : `Alianza de alcance metropolitano en el entorno de ${city.name}.`
+  };
+}
+
+function projectDetail(project, city, index, cityIndex) {
+  const theme = city.themes[index % city.themes.length];
+  const milestones = projectMilestones[(cityIndex + index) % projectMilestones.length];
+  const done = (cityIndex + index) % 4;
+  return {
+    goal: `Reducir la distancia entre el diagnóstico y la decisión en ${theme.toLowerCase()}, con evidencia que el municipio pueda usar en su propio ciclo presupuestario.`,
+    period: `${project.year} – ${project.year + 1}`,
+    lead: city.institution,
+    partners: [
+      partnerPool[(cityIndex + index) % partnerPool.length],
+      partnerPool[(cityIndex + index + 3) % partnerPool.length]
+    ],
+    budget: 45000 + ((cityIndex * 7 + index * 13) % 24) * 5000,
+    milestones: milestones.map((label, milestoneIndex) => ({
+      label,
+      done: milestoneIndex <= done
+    })),
+    indicators: [
+      { label: "Personas alcanzadas", value: 320 + ((cityIndex + index) % 12) * 145 },
+      { label: "Equipos municipales implicados", value: 3 + ((cityIndex + index) % 6) },
+      { label: "Barrios cubiertos", value: 2 + ((cityIndex + index * 2) % 9) }
+    ]
+  };
+}
+
+function programDetail(program, city, cityIndex) {
+  return {
+    format: "Presencial con acompañamiento remoto entre sesiones",
+    duration: `${6 + (cityIndex % 5)} meses · ${8 + (cityIndex % 4)} sesiones`,
+    cohorts: 1 + (cityIndex % 4),
+    audience: "Equipos técnicos y mandos medios del municipio y de instituciones aliadas",
+    requirements: "Presentar un desafío real del área y comprometer horas de trabajo del equipo",
+    outcomes: [
+      "Un desafío público reformulado y acotado",
+      "Un prototipo probado con usuarios reales",
+      "Una nota de aprendizaje publicada para la red"
+    ]
+  };
+}
+
+function initiativeDetail(initiative, city, index, cityIndex) {
+  const theme = city.themes[index % city.themes.length];
+  return {
+    duration: `${4 + ((cityIndex + index) % 9)} semanas`,
+    participants: 12 + ((cityIndex + index * 3) % 40),
+    theme,
+    method: [
+      "Convocatoria abierta en el territorio",
+      "Sesiones de trabajo con el equipo municipal",
+      "Prueba corta con medición simple",
+      "Nota de aprendizaje para la red"
+    ],
+    learning: `Qué condiciones hacen que una acción de ${theme.toLowerCase()} se sostenga después de que termina el acompañamiento.`
+  };
+}
+
+function awardDetail(award, city, cityIndex) {
+  return {
+    category: ["Colaboración cívica", "Piloto replicable", "Datos abiertos", "Aprendizaje en red"][
+      cityIndex % 4
+    ],
+    reason: `Por documentar el proceso completo —incluidos los intentos que no funcionaron— y ponerlo a disposición del resto de ciudades del HUB.`,
+    jury: "Comité de pares de la red (demostración)",
+    scope: `Edición ${cityIndex % 4 === 0 ? 2024 : 2025} · categoría regional`
+  };
+}
+
 const HUB_CITIES = rawCities.map((city, cityIndex) => {
   const people = [
     ...(hubPeople[city.id] || []).map(person => ({
@@ -540,7 +701,13 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
       organization: city.institution,
       source: "demo"
     }))
-  ];
+  ].map((person, index) => ({
+    ...person,
+    id: `${city.id}-persona-${index + 1}`,
+    entity: "persona",
+    cityId: city.id,
+    detail: personDetail(person, city, index)
+  }));
 
   return {
     ...city,
@@ -559,8 +726,23 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
         role: `Conecta academia, sociedad civil y ecosistema emprendedor alrededor de ${city.themes[0].toLowerCase()}.`,
         source: "demo"
       }
-    ],
-    projects: city.projects.map((project, index) => normalizeProject(project, city, index, cityIndex)),
+    ].map((institution, index) => ({
+      ...institution,
+      id: `${city.id}-institucion-${index + 1}`,
+      entity: "institucion",
+      cityId: city.id,
+      detail: institutionDetail(institution, city, index)
+    })),
+    projects: city.projects.map((project, index) => {
+      const normalized = normalizeProject(project, city, index, cityIndex);
+      return {
+        ...normalized,
+        id: `${city.id}-proyecto-${index + 1}`,
+        entity: "proyecto",
+        cityId: city.id,
+        detail: projectDetail(normalized, city, index, cityIndex)
+      };
+    }),
     programs: [
       {
         title: city.program,
@@ -569,7 +751,13 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
         source: "demo",
         participants: 24 + cityIndex * 3
       }
-    ],
+    ].map((program, index) => ({
+      ...program,
+      id: `${city.id}-programa-${index + 1}`,
+      entity: "programa",
+      cityId: city.id,
+      detail: programDetail(program, city, cityIndex)
+    })),
     initiatives: city.initiatives.map((title, index) => ({
       title,
       description: initiativeNarratives[(cityIndex + index) % initiativeNarratives.length]({
@@ -578,7 +766,11 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
         cityName: city.name
       }),
       status: ["Activa", "Completada", "En diseño", "Activa"][(cityIndex + index) % 4],
-      source: "demo"
+      source: "demo",
+      id: `${city.id}-iniciativa-${index + 1}`,
+      entity: "iniciativa",
+      cityId: city.id,
+      detail: initiativeDetail(title, city, index, cityIndex)
     })),
     awards: [
       {
@@ -587,7 +779,13 @@ const HUB_CITIES = rawCities.map((city, cityIndex) => {
         organization: awardBodies[cityIndex % awardBodies.length],
         source: "demo"
       }
-    ],
+    ].map((award, index) => ({
+      ...award,
+      id: `${city.id}-premio-${index + 1}`,
+      entity: "premio",
+      cityId: city.id,
+      detail: awardDetail(award, city, cityIndex)
+    })),
     dataSource: "demo",
     updated: "2026-08-28"
   };

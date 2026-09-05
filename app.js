@@ -54,6 +54,8 @@
     directoryCount: document.getElementById("directoryCount"),
     directoryEmpty: document.getElementById("directoryEmpty"),
     directoryClose: document.getElementById("directoryClose"),
+    entityDialog: document.getElementById("entityDialog"),
+    entityCard: document.getElementById("entityCard"),
     openDirectoryButton: document.getElementById("openDirectoryButton")
   };
 
@@ -95,6 +97,21 @@
   const METRO_EXPAND_WIDTH = 430;
   // Nivel al que se acerca el mapa al seleccionar una ciudad.
   const FOCUS_WIDTH = 300;
+
+  // Índice plano de todas las entidades: personas, instituciones, proyectos,
+  // programas, iniciativas y premios. Es lo que permite abrir cualquiera desde
+  // cualquier sitio con solo su identificador.
+  const entityById = new Map();
+  cities.forEach(city => {
+    [
+      ...city.people,
+      ...city.institutions,
+      ...city.projects,
+      ...city.programs,
+      ...city.initiatives,
+      ...city.awards
+    ].forEach(entity => entityById.set(entity.id, entity));
+  });
 
   const svgNS = "http://www.w3.org/2000/svg";
   const baseView = { x: 0, y: 0, width: 860, height: 760 };
@@ -1125,11 +1142,11 @@
           ${city.people
             .map(
               person => `
-            <article class="person-card">
+            <button class="person-card is-openable" type="button" data-entity-id="${escapeHTML(person.id)}">
               <span class="person-avatar">${escapeHTML(person.initials)}</span>
               <span class="person-copy"><strong>${escapeHTML(person.name)}</strong><span>${escapeHTML(person.role)}</span></span>
               ${sourceBadge(person.source)}
-            </article>`
+            </button>`
             )
             .join("")}
         </div>
@@ -1140,7 +1157,7 @@
           ${city.institutions
             .map(
               institution => `
-            <article class="institution-card">
+            <button class="institution-card is-openable" type="button" data-entity-id="${escapeHTML(institution.id)}">
               <span class="institution-icon">${icon("building")}</span>
               <span class="institution-copy">
                 <strong>${escapeHTML(institution.name)}</strong>
@@ -1148,7 +1165,7 @@
                 <em>${escapeHTML(institution.role)}</em>
               </span>
               ${sourceBadge(institution.source)}
-            </article>`
+            </button>`
             )
             .join("")}
         </div>
@@ -1157,13 +1174,13 @@
 
   function actionCard(item, extra = "") {
     return `
-      <article class="action-card">
+      <button class="action-card is-openable" type="button" data-entity-id="${escapeHTML(item.id)}">
         <div class="action-card__top">
           <span class="action-copy"><strong>${escapeHTML(item.title)}</strong><p>${escapeHTML(item.description)}</p></span>
           ${sourceBadge(item.source)}
         </div>
         <div class="action-meta"><span class="status-badge">${escapeHTML(item.status)}</span>${extra ? `<span>${escapeHTML(extra)}</span>` : ""}</div>
-      </article>`;
+      </button>`;
   }
 
   function renderActions(city) {
@@ -1220,11 +1237,11 @@
           ${city.awards
             .map(
               award => `
-            <article class="award-card">
+            <button class="award-card is-openable" type="button" data-entity-id="${escapeHTML(award.id)}">
               <span class="award-icon">${icon("award")}</span>
               <span><strong>${escapeHTML(award.title)}</strong><p>${escapeHTML(award.organization)} · ${award.year}</p></span>
               ${sourceBadge(award.source)}
-            </article>`
+            </button>`
             )
             .join("")}
         </div>
@@ -1252,13 +1269,13 @@
         entry => `
       <tr>
         <th scope="row">
-          <span class="directory-person">
+          <button class="directory-person" type="button" data-entity-id="${escapeHTML(entry.id)}">
             <span class="person-avatar">${escapeHTML(entry.initials)}</span>
             <span class="directory-person__copy">
               <strong>${escapeHTML(entry.name)}</strong>
               <span>${escapeHTML(entry.role)}</span>
             </span>
-          </span>
+          </button>
         </th>
         <td>${escapeHTML(entry.organization)}</td>
         <td>
@@ -1270,6 +1287,10 @@
       </tr>`
       )
       .join("");
+
+    els.directoryBody.querySelectorAll("[data-entity-id]").forEach(button => {
+      button.addEventListener("click", () => openEntity(button.dataset.entityId));
+    });
 
     els.directoryBody.querySelectorAll("[data-directory-city]").forEach(button => {
       button.addEventListener("click", () => {
@@ -1295,6 +1316,195 @@
     els.directoryView.hidden = true;
     els.workspace.hidden = false;
     setActiveNav("mapa");
+  }
+
+  const ENTITY_LABELS = {
+    persona: "Persona",
+    institucion: "Institución",
+    proyecto: "Proyecto",
+    programa: "Programa",
+    iniciativa: "Iniciativa",
+    premio: "Premio"
+  };
+
+  const ENTITY_ICONS = {
+    persona: "users",
+    institucion: "building",
+    proyecto: "project",
+    programa: "program",
+    iniciativa: "spark",
+    premio: "award"
+  };
+
+  function factRow(label, value) {
+    return `<div class="fact"><dt>${escapeHTML(label)}</dt><dd>${value}</dd></div>`;
+  }
+
+  function factList(rows) {
+    return `<dl class="fact-list">${rows.join("")}</dl>`;
+  }
+
+  function chipList(items) {
+    return `<div class="entity-chips">${items.map(item => `<span>${escapeHTML(item)}</span>`).join("")}</div>`;
+  }
+
+  function personBody(entity) {
+    // Las personas del directorio no llevan datos añadidos: ver la nota en data.js.
+    if (entity.detail.kind === "hub") {
+      return `
+        <div class="entity-note">${icon("info")}<span>${escapeHTML(entity.detail.note)}</span></div>
+        ${factList([
+          factRow("Cargo", escapeHTML(entity.role)),
+          factRow("Institución", escapeHTML(entity.organization)),
+          factRow("Ciudad", escapeHTML(cityById.get(entity.cityId).name))
+        ])}
+        <a class="entity-source" href="${escapeHTML(entity.sourceUrl)}" target="_blank" rel="noreferrer">Ver el directorio del HUB</a>`;
+    }
+    return `
+      <p class="entity-lead">${escapeHTML(entity.detail.bio)}</p>
+      ${factList([
+        factRow("Cargo", escapeHTML(entity.role)),
+        factRow("Institución", escapeHTML(entity.organization)),
+        factRow("En el equipo desde", entity.detail.since),
+        factRow("Formación", escapeHTML(entity.detail.education)),
+        factRow("Contacto", `<code>${escapeHTML(entity.detail.contact)}</code>`)
+      ])}
+      <h4>Temas de trabajo</h4>
+      ${chipList(entity.detail.focus)}`;
+  }
+
+  function institutionBody(entity) {
+    return `
+      <p class="entity-lead">${escapeHTML(entity.role)}</p>
+      ${factList([
+        factRow("Tipo", escapeHTML(entity.type)),
+        factRow("En funcionamiento desde", entity.detail.founded),
+        factRow("Equipo aproximado", `${entity.detail.teamSize} personas`),
+        factRow("Alcance", escapeHTML(entity.detail.reach))
+      ])}
+      <h4>Líneas de trabajo</h4>
+      <ul class="entity-list">${entity.detail.lines.map(line => `<li>${escapeHTML(line)}</li>`).join("")}</ul>`;
+  }
+
+  function projectBody(entity) {
+    return `
+      <p class="entity-lead">${escapeHTML(entity.description)}</p>
+      ${factList([
+        factRow("Objetivo", escapeHTML(entity.detail.goal)),
+        factRow("Estado", escapeHTML(entity.status)),
+        factRow("Periodo", escapeHTML(entity.detail.period)),
+        factRow("Responsable", escapeHTML(entity.detail.lead)),
+        factRow("Presupuesto demo", `${formatNumber(entity.detail.budget)} USD`)
+      ])}
+      <h4>Hitos</h4>
+      <ol class="milestones">
+        ${entity.detail.milestones
+          .map(
+            milestone => `
+          <li class="${milestone.done ? "is-done" : ""}">
+            <span class="milestone-dot"></span>${escapeHTML(milestone.label)}
+          </li>`
+          )
+          .join("")}
+      </ol>
+      <h4>Indicadores</h4>
+      <div class="indicator-grid">
+        ${entity.detail.indicators
+          .map(
+            indicator => `
+          <div class="indicator"><strong>${formatNumber(indicator.value)}</strong><span>${escapeHTML(indicator.label)}</span></div>`
+          )
+          .join("")}
+      </div>
+      <h4>Aliados</h4>
+      ${chipList(entity.detail.partners)}`;
+  }
+
+  function programBody(entity) {
+    return `
+      <p class="entity-lead">${escapeHTML(entity.description)}</p>
+      ${factList([
+        factRow("Estado", escapeHTML(entity.status)),
+        factRow("Formato", escapeHTML(entity.detail.format)),
+        factRow("Duración", escapeHTML(entity.detail.duration)),
+        factRow("Cohortes realizadas", entity.detail.cohorts),
+        factRow("Participantes", entity.participants),
+        factRow("Dirigido a", escapeHTML(entity.detail.audience)),
+        factRow("Requisitos", escapeHTML(entity.detail.requirements))
+      ])}
+      <h4>Qué se lleva cada equipo</h4>
+      <ul class="entity-list">${entity.detail.outcomes.map(item => `<li>${escapeHTML(item)}</li>`).join("")}</ul>`;
+  }
+
+  function initiativeBody(entity) {
+    return `
+      <p class="entity-lead">${escapeHTML(entity.description)}</p>
+      ${factList([
+        factRow("Estado", escapeHTML(entity.status)),
+        factRow("Duración", escapeHTML(entity.detail.duration)),
+        factRow("Participantes", entity.detail.participants),
+        factRow("Tema", escapeHTML(entity.detail.theme))
+      ])}
+      <h4>Cómo se hace</h4>
+      <ol class="entity-list entity-list--ordered">${entity.detail.method.map(step => `<li>${escapeHTML(step)}</li>`).join("")}</ol>
+      <h4>Qué se busca aprender</h4>
+      <p>${escapeHTML(entity.detail.learning)}</p>`;
+  }
+
+  function awardBody(entity) {
+    return `
+      ${factList([
+        factRow("Categoría", escapeHTML(entity.detail.category)),
+        factRow("Otorgado por", escapeHTML(entity.organization)),
+        factRow("Año", entity.year),
+        factRow("Jurado", escapeHTML(entity.detail.jury)),
+        factRow("Alcance", escapeHTML(entity.detail.scope))
+      ])}
+      <h4>Motivo</h4>
+      <p>${escapeHTML(entity.detail.reason)}</p>`;
+  }
+
+  const ENTITY_BODIES = {
+    persona: personBody,
+    institucion: institutionBody,
+    proyecto: projectBody,
+    programa: programBody,
+    iniciativa: initiativeBody,
+    premio: awardBody
+  };
+
+  function entityTitle(entity) {
+    return entity.entity === "persona" ? entity.name : entity.title || entity.name;
+  }
+
+  function openEntity(id) {
+    const entity = entityById.get(id);
+    if (!entity) return;
+    const city = cityById.get(entity.cityId);
+
+    els.entityCard.innerHTML = `
+      <div class="entity-head">
+        <span class="entity-kind">${icon(ENTITY_ICONS[entity.entity])} ${escapeHTML(ENTITY_LABELS[entity.entity])}</span>
+        <button class="dialog-close" type="button" data-close-entity aria-label="Cerrar">${icon("close")}</button>
+      </div>
+      <h2 id="entityTitle">${escapeHTML(entityTitle(entity))}</h2>
+      <div class="entity-meta">
+        <button class="entity-city" type="button" data-entity-city="${escapeHTML(city.id)}">${icon("globe")} ${escapeHTML(city.name)}, ${escapeHTML(city.country)}</button>
+        ${sourceBadge(entity.source)}
+      </div>
+      <div class="entity-body">${ENTITY_BODIES[entity.entity](entity)}</div>`;
+
+    els.entityDialog.showModal();
+    els.entityCard.scrollTop = 0;
+
+    els.entityCard
+      .querySelector("[data-close-entity]")
+      .addEventListener("click", () => els.entityDialog.close());
+    els.entityCard.querySelector("[data-entity-city]").addEventListener("click", () => {
+      els.entityDialog.close();
+      selectCity(city.id);
+    });
+    announce(`${ENTITY_LABELS[entity.entity]}: ${entityTitle(entity)}.`);
   }
 
   function renderGlobalDetail() {
@@ -1362,6 +1572,9 @@
     els.detailPanel.classList.add("is-open");
 
     els.detailContent.querySelector("[data-close-detail]")?.addEventListener("click", closeDetail);
+    els.detailContent.querySelectorAll("[data-entity-id]").forEach(button => {
+      button.addEventListener("click", () => openEntity(button.dataset.entityId));
+    });
     els.detailContent.querySelectorAll("[data-detail-tab]").forEach(button => {
       button.addEventListener("click", () => {
         state.detailTab = button.dataset.detailTab;
