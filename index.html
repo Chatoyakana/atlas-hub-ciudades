@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#076d91" />
+  <meta name="description" content="Prototipo de exploración cartográfica de la red del HUB de Ciudades de América Latina y el Caribe." />
+  <title>Atlas de conocimiento · HUB de Ciudades</title>
+  <link rel="icon" href="assets/hub-mark.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Atlas HUB, inicio">
+      <img src="assets/hub-mark.png" alt="" class="brand__mark" />
+      <span class="brand__wordmark">
+        <strong>ATLAS <span>HUB</span></strong>
+        <small>Conocimiento urbano en red</small>
+      </span>
+    </a>
+
+    <nav class="main-nav" aria-label="Navegación principal">
+      <button class="nav-item nav-item--active" type="button" data-nav="mapa">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>
+        Mapa
+      </button>
+      <button class="nav-item" type="button" data-nav="directorio">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 6h5M16 10h5M17 14h4"/></svg>
+        Directorio
+      </button>
+      <button class="nav-item" type="button" data-open-method>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        Acerca de los datos
+      </button>
+    </nav>
+
+    <div class="topbar__actions">
+      <button class="prototype-pill" type="button" data-open-method>
+        <span></span> Prototipo · datos demo
+      </button>
+      <button class="icon-button mobile-filter-button" id="openFiltersButton" type="button" aria-label="Abrir filtros">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="page-heading" aria-labelledby="pageTitle">
+    <div>
+      <div class="eyebrow"><span class="eyebrow__line"></span> RED DE CIUDADES DE AMÉRICA LATINA Y EL CARIBE</div>
+      <h1 id="pageTitle">Mapa de conocimiento urbano</h1>
+      <p>Explora quiénes hacen la red, qué están probando y dónde están sus capacidades.</p>
+    </div>
+    <div class="network-kpis" aria-label="Resumen de la red">
+      <div class="kpi"><strong id="kpiCities">17</strong><span>ciudades</span></div>
+      <div class="kpi"><strong id="kpiCountries">10</strong><span>países</span></div>
+      <div class="kpi"><strong id="kpiActors">51</strong><span>personas</span></div>
+      <div class="kpi kpi--accent"><strong id="kpiActions">119</strong><span>acciones</span></div>
+    </div>
+  </section>
+
+  <main class="workspace">
+    <aside class="explorer-panel" id="explorerPanel" aria-label="Filtros y ciudades">
+      <div class="panel-mobile-head">
+        <strong>Explorar la red</strong>
+        <button class="icon-button" id="closeFiltersButton" type="button" aria-label="Cerrar filtros">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <div class="explorer-controls">
+        <label class="search-box" for="citySearch">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <input id="citySearch" type="search" autocomplete="off" placeholder="Buscar ciudad, persona o proyecto" />
+          <kbd>⌘ K</kbd>
+        </label>
+
+        <div class="filter-row">
+          <label class="select-field">
+            <span>País</span>
+            <select id="countryFilter" aria-label="Filtrar por país">
+              <option value="all">Todos los países</option>
+            </select>
+          </label>
+          <button class="clear-button" id="clearFilters" type="button" disabled>
+            Limpiar
+          </button>
+        </div>
+
+        <fieldset class="theme-filter">
+          <legend>Temas de conocimiento</legend>
+          <div class="theme-chips" id="themeChips"></div>
+        </fieldset>
+      </div>
+
+      <div class="results-heading">
+        <div>
+          <strong>Ciudades de la red</strong>
+          <span id="resultsLabel">17 resultados</span>
+        </div>
+        <button class="sort-button" id="sortButton" type="button" aria-label="Cambiar orden" title="Cambiar orden">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h12M8 12h8M8 18h4M4 5v14M2 17l2 2 2-2"/></svg>
+        </button>
+      </div>
+
+      <div class="city-list" id="cityList" role="listbox" aria-label="Ciudades filtradas"></div>
+      <div class="source-strip">
+        <span class="source-dot source-dot--hub"></span> Verificado en HUB
+        <span class="source-dot source-dot--demo"></span> Contenido demo
+      </div>
+    </aside>
+
+    <section class="map-panel" aria-label="Mapa interactivo">
+      <div class="map-toolbar">
+        <div>
+          <div class="map-toolbar__title">
+            <span class="live-indicator"></span>
+            <h2>América Latina y el Caribe</h2>
+          </div>
+          <p id="mapSubtitle">17 nodos visibles · selecciona una ciudad para abrir su ficha</p>
+        </div>
+        <div class="map-toolbar__actions">
+          <button class="toolbar-button toolbar-button--active" id="connectionsToggle" type="button" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="7" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="m8 7 8-.7M7 9l4 7M17 8l-4 8"/></svg>
+            Conexiones
+          </button>
+          <button class="toolbar-button" id="resetMapButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.7L4 8.6M4 4v4.6h4.6"/></svg>
+            Restablecer
+          </button>
+        </div>
+      </div>
+
+      <div class="map-canvas" id="mapCanvas">
+        <svg id="networkMap" viewBox="0 0 860 760" role="img" aria-labelledby="mapTitle mapDescription">
+          <title id="mapTitle">Mapa de ciudades de la red HUB</title>
+          <desc id="mapDescription">Mapa interactivo de América Latina y el Caribe con ciudades miembros de la red.</desc>
+          <defs>
+            <pattern id="dotPattern" width="22" height="22" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="1.15" fill="#8cb6c4" opacity="0.26" />
+            </pattern>
+            <filter id="markerShadow" x="-100%" y="-100%" width="300%" height="300%">
+              <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#073f53" flood-opacity="0.24"/>
+            </filter>
+            <linearGradient id="oceanGlow" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#f1fafb"/>
+              <stop offset="1" stop-color="#dff1f4"/>
+            </linearGradient>
+          </defs>
+          <rect width="860" height="760" fill="url(#oceanGlow)" />
+          <rect width="860" height="760" fill="url(#dotPattern)" />
+          <g id="mapViewport">
+            <g id="countryLayer"></g>
+            <g id="connectionLayer"></g>
+            <g id="markerLayer"></g>
+          </g>
+        </svg>
+
+        <div class="map-overview-card" id="mapOverviewCard">
+          <div class="overview-card__top">
+            <span>RED REGIONAL</span>
+            <span class="overview-card__pulse"></span>
+          </div>
+          <strong id="overviewHeadline">17 ciudades conectadas</strong>
+          <p id="overviewText">Haz clic en un nodo para explorar su ecosistema de conocimiento.</p>
+          <div class="overview-themes" id="overviewThemes"></div>
+        </div>
+
+        <div class="map-legend" aria-label="Leyenda del mapa">
+          <div><span class="legend-node"></span> Ciudad HUB</div>
+          <div><span class="legend-node legend-node--selected"></span> Seleccionada</div>
+          <div><span class="legend-line"></span> Conexión temática</div>
+        </div>
+
+        <div class="zoom-controls" aria-label="Controles del mapa">
+          <button id="zoomIn" type="button" aria-label="Acercar">+</button>
+          <button id="zoomOut" type="button" aria-label="Alejar">−</button>
+          <button id="zoomHome" type="button" aria-label="Ver mapa completo">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6M4 4v6M20 4h-6M20 4v6M4 20h6M4 20v-6M20 20h-6M20 20v-6"/></svg>
+          </button>
+        </div>
+
+        <div class="map-tooltip" id="mapTooltip" role="tooltip" hidden></div>
+        <div class="map-attribution">Límites: Natural Earth · Datos de nodos: HUB + demo</div>
+        <button class="mobile-results-button" id="mobileResultsButton" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          Ver <span id="mobileResultCount">17</span> ciudades
+        </button>
+      </div>
+    </section>
+
+    <aside class="detail-panel" id="detailPanel" aria-live="polite" aria-label="Ficha de ciudad">
+      <div id="detailContent"></div>
+    </aside>
+  </main>
+
+  <div class="mobile-backdrop" id="mobileBackdrop" hidden></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="method-dialog" id="methodDialog">
+    <form method="dialog" class="dialog-card">
+      <button class="dialog-close" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+      <div class="dialog-icon">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5 12 2l8 3.5v5c0 5.1-3.4 9.7-8 11.5-4.6-1.8-8-6.4-8-11.5v-5Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg>
+      </div>
+      <p class="dialog-eyebrow">TRANSPARENCIA DEL PROTOTIPO</p>
+      <h2>Sobre los datos de este atlas</h2>
+      <p>Esta versión combina registros públicos del directorio del HUB con contenido sintético para completar y probar la experiencia.</p>
+      <div class="method-list">
+        <div>
+          <span class="source-dot source-dot--hub"></span>
+          <p><strong>Fuente HUB</strong><br />Nombres, cargos e instituciones publicados en el directorio; además de proyectos destacados en el sitio oficial.</p>
+        </div>
+        <div>
+          <span class="source-dot source-dot--demo"></span>
+          <p><strong>Contenido demo</strong><br />Datos base, fechas de adhesión, personas adicionales, premios, programas e iniciativas. No deben interpretarse como datos oficiales.</p>
+        </div>
+        <div>
+          <span class="method-map-icon"></span>
+          <p><strong>Cartografía</strong><br />Geometrías simplificadas de Natural Earth, escala 1:110m. Coordenadas urbanas de referencia.</p>
+        </div>
+      </div>
+      <div class="dialog-callout">
+        <strong>Siguiente paso recomendado</strong>
+        <span>Conectar una hoja o CMS con responsable, fuente, fecha de actualización y estado de verificación por registro.</span>
+      </div>
+      <div class="dialog-actions">
+        <a href="https://hubdeciudades.org/directorio/" target="_blank" rel="noreferrer">Ver directorio original</a>
+        <button class="primary-button" value="close">Entendido</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
