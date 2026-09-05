@@ -882,9 +882,14 @@ svg {
   transition: opacity 0.16s ease;
 }
 
+/* Al acercar, el viewBox escala todo el dibujo y los pines crecían hasta
+   solaparse y volverse difíciles de apuntar. Contrarrestar la escala los deja
+   del mismo tamaño en pantalla a cualquier zoom; como las posiciones sí
+   escalan, acercarse ahora separa los nodos en lugar de engordarlos. */
 .city-marker .marker-hit {
   fill: transparent;
   pointer-events: all;
+  r: calc(23px * var(--map-zoom, 1));
 }
 
 .city-marker .marker-leader {
@@ -896,6 +901,7 @@ svg {
 
 .city-marker .marker-pulse {
   fill: var(--hub-orange);
+  r: calc(18px * var(--map-zoom, 1));
   opacity: 0;
   transform-box: fill-box;
   transform-origin: center;
@@ -903,6 +909,7 @@ svg {
 
 .city-marker .marker-ring {
   fill: white;
+  r: calc(10.5px * var(--map-zoom, 1));
   stroke: rgba(7, 77, 104, 0.2);
   stroke-width: 1;
   vector-effect: non-scaling-stroke;
@@ -910,6 +917,7 @@ svg {
 
 .city-marker .marker-core {
   fill: var(--hub-orange);
+  r: calc(6.3px * var(--map-zoom, 1));
   stroke: white;
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
@@ -917,6 +925,7 @@ svg {
 
 .city-marker .marker-center {
   fill: white;
+  r: calc(1.8px * var(--map-zoom, 1));
 }
 
 .city-marker .city-label {
@@ -961,7 +970,7 @@ svg {
 
 .city-marker.is-selected .city-label {
   fill: var(--hub-blue-deep);
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--map-zoom, 1));
 }
 
 .city-marker.is-muted {
@@ -2902,14 +2911,23 @@ svg {
   opacity: 0.32;
 }
 
+.metro-marker .marker-hit {
+  fill: transparent;
+  pointer-events: all;
+  r: calc(24px * var(--map-zoom, 1));
+}
+
 .metro-ring {
   fill: white;
+  r: calc(15px * var(--map-zoom, 1));
   stroke: var(--hub-blue);
   stroke-width: 2;
+  vector-effect: non-scaling-stroke;
 }
 
 .metro-core {
   fill: var(--hub-blue);
+  r: calc(9.5px * var(--map-zoom, 1));
 }
 
 .metro-count {
@@ -3263,25 +3281,6 @@ svg {
 /* ---------------------------------------------------------------
    Exportación en PDF · hoja imprimible
    --------------------------------------------------------------- */
-
-.export-json-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-  padding: 12px 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #f8fbfb;
-  font-size: 12.5px;
-  color: var(--muted);
-}
-
-.command-button--ghost {
-  background: white;
-}
 
 /* La hoja solo existe para el papel: en pantalla no ocupa nada. */
 .print-sheet {

@@ -1240,11 +1240,6 @@
         <p>${verified} de ${records.length} registros de contenido tienen fuente pública vinculada. Los datos base continúan como demostración.</p>
       </div>
 
-      <div class="export-json-row">
-        <span>¿Necesitas los datos en crudo?</span>
-        <button class="command-button command-button--ghost" type="button" data-action="export-json">${icon("download")} Descargar JSON</button>
-      </div>
-
       <section class="section-block">
         <div class="section-heading"><h3>Datos base de la ciudad</h3><span>Demostración</span></div>
         <table class="data-table">
@@ -1616,9 +1611,6 @@
     els.detailContent
       .querySelector("[data-action='export-pdf']")
       ?.addEventListener("click", () => exportCityPdf(city));
-    els.detailContent
-      .querySelector("[data-action='export-json']")
-      ?.addEventListener("click", () => exportCity(city));
     els.detailContent.querySelectorAll("[data-related-city]").forEach(button => {
       button.addEventListener("click", () => selectCity(button.dataset.relatedCity));
     });
@@ -1715,46 +1707,6 @@
 
   function hideShareFallback() {
     if (els.shareFallback) els.shareFallback.hidden = true;
-  }
-
-  function exportCity(city) {
-    const exportData = {
-      meta: {
-        aviso: "Prototipo: combina registros del HUB con contenido de demostración.",
-        fuente_directorio: atlas.sources.directory,
-        exportado_el: atlas.referenceDate
-      },
-      ciudad: {
-        nombre: city.name,
-        localidad: city.locality || null,
-        pais: city.country,
-        coordenadas: { latitud: city.lat, longitud: city.lon },
-        miembro_desde: city.joined,
-        tiempo_en_la_red: membershipDuration(city.joined),
-        datos_base_demo: {
-          poblacion: city.population,
-          superficie_km2: city.area,
-          elevacion_m: city.elevation
-        },
-        temas: city.themes,
-        personas: city.people,
-        instituciones: city.institutions,
-        proyectos: city.projects,
-        programas: city.programs,
-        iniciativas: city.initiatives,
-        premios: city.awards
-      }
-    };
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `atlas-hub-${city.id}.json`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 500);
-    showToast("Ficha exportada en formato JSON.");
   }
 
   // A-02: la ficha ya no es una region viva. En vez de releer la tarjeta
@@ -2225,7 +2177,7 @@
           return;
         }
       }
-      if (event.button !== 0 || event.target.closest(".city-marker")) return;
+      if (event.button !== 0 || event.target.closest(".city-marker, .metro-marker")) return;
       drag = {
         startX: event.clientX,
         startY: event.clientY,
