@@ -2,6 +2,8 @@
 
 Prototipo navegable de exploración cartográfica para la red del HUB de Ciudades de América Latina y el Caribe.
 
+**En línea:** https://chatoyakana.github.io/atlas-hub-ciudades/
+
 ## Qué incluye
 
 - Mapa vectorial interactivo de América Latina y el Caribe.
