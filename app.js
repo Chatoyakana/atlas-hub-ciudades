@@ -177,7 +177,7 @@
 
   function sourceBadge(source) {
     const isHub = source === "hub";
-    return `<span class="source-badge source-badge--${isHub ? "hub" : "demo"}" title="${isHub ? "Registro publicado por el HUB" : "Contenido sintético de demostración"}">${isHub ? "Fuente HUB" : "Demo"}</span>`;
+    return `<span class="source-badge source-badge--${isHub ? "hub" : "demo"}" title="${isHub ? "Registro publicado en el sitio del HUB" : "Contenido sintético de demostración"}">${isHub ? "Fuente HUB" : "Demo"}</span>`;
   }
 
   function formatNumber(value) {
@@ -1099,7 +1099,7 @@
   }
 
   function demoNotice() {
-    return `<div class="demo-notice">${icon("info")}<span>Los elementos con sello <strong>Demo</strong> son sintéticos y sirven para probar la estructura del atlas. Los registros <strong>Fuente HUB</strong> provienen del sitio oficial.</span></div>`;
+    return `<div class="demo-notice">${icon("info")}<span>Los elementos con sello <strong>Demo</strong> son sintéticos y sirven para probar la estructura del atlas; <strong>todas las personas lo son</strong>. Los registros <strong>Fuente HUB</strong> —instituciones y proyectos— provienen del sitio oficial.</span></div>`;
   }
 
   function renderSummary(city) {
@@ -1285,10 +1285,10 @@
 
   function renderDirectory() {
     const visible = directoryPeople.filter(entry => state.filteredIds.has(entry.city.id));
-    const fromHub = visible.filter(entry => entry.source === "hub").length;
+    const cityCount = new Set(visible.map(entry => entry.city.id)).size;
 
     els.directoryCount.textContent = visible.length
-      ? `${visible.length} ${visible.length === 1 ? "persona" : "personas"} · ${fromHub} con fuente en el directorio del HUB`
+      ? `${visible.length} ${visible.length === 1 ? "persona" : "personas"} en ${cityCount} ${cityCount === 1 ? "ciudad" : "ciudades"} · perfiles de demostración`
       : "Sin personas para los filtros activos";
 
     els.directoryEmpty.hidden = visible.length > 0;
@@ -1829,9 +1829,10 @@
       </div>
 
       <div class="print-notice">
-        Este documento combina registros publicados en el directorio del HUB con contenido de
-        demostración generado para probar el prototipo. Cada registro lleva su procedencia: los
-        marcados <strong>Demo</strong> no deben interpretarse como información oficial.
+        Este documento combina instituciones y proyectos publicados en el sitio del HUB con contenido
+        de demostración generado para probar el prototipo. <strong>Todas las personas que aparecen son
+        inventadas.</strong> Cada registro lleva su procedencia: los marcados <strong>Demo</strong> no
+        deben interpretarse como información oficial.
       </div>
 
       ${printSection(
@@ -1954,7 +1955,7 @@
       )}
 
       <footer class="print-foot">
-        <p><strong>Procedencia.</strong> ${verified} de ${records.length} registros de esta ficha tienen fuente pública vinculada en el directorio del HUB (${escapeHTML(atlas.sources.directory)}). El resto es contenido de demostración.</p>
+        <p><strong>Procedencia.</strong> ${verified} de ${records.length} registros de esta ficha —instituciones y proyectos— tienen fuente pública en el sitio del HUB (${escapeHTML(atlas.sources.directory)}). El resto, incluidas todas las personas, es contenido de demostración.</p>
         <p><strong>Cartografía.</strong> ${escapeHTML(atlas.sources.map)}.</p>
         <p class="print-muted">Atlas de conocimiento · HUB de Ciudades · prototipo</p>
       </footer>`;

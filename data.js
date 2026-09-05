@@ -503,9 +503,12 @@ function initials(name) {
     .toUpperCase();
 }
 
-// Los datos personales viven en data/personas-hub.js, aislados para poder
-// aplicar una rectificación o una baja sin tocar el resto del modelo.
-const hubPeople = window.HUB_PEOPLE || {};
+// El listado de personas vive en data/personas.js, aislado del resto del
+// modelo. Hoy es íntegramente sintético; el archivo se mantiene aparte porque
+// es donde entrarían personas reales si el atlas se conectara a una fuente
+// administrable, y entonces habría que poder rectificarlo o vaciarlo sin tocar
+// nada más.
+const rosterPeople = window.HUB_PEOPLE || {};
 
 const initiativeNarratives = [
   ({ title, cityName }) =>
@@ -531,12 +534,12 @@ const awardBodies = [
  * Cada persona, institución, proyecto, programa, iniciativa y premio recibe un
  * identificador estable y una ficha propia, para que el atlas pueda abrirlos.
  *
- * REGLA: sobre las personas del directorio del HUB —personas reales— no se
- * inventa nada. Su ficha muestra solo lo que el directorio publica: nombre,
- * cargo, institución y enlace a la fuente. Las biografías, trayectorias y
- * contactos se generan únicamente para las personas de demostración, que son
- * sintéticas. Atribuir a alguien real una formación o un correo inventados
- * sería fabricar datos personales, por muy visible que fuera el sello "Demo".
+ * REGLA: no se genera biografía, formación ni contacto para ninguna persona
+ * marcada como fuente pública. Hoy todas las personas del atlas son sintéticas
+ * —ver data/personas.js— así que la regla no excluye a nadie, pero la guarda
+ * se mantiene: si algún día se conectan personas reales, atribuirles una
+ * formación o un correo inventados sería fabricar datos personales, por muy
+ * visible que fuera el sello "Demo".
  */
 function slugify(value) {
   return value
@@ -584,11 +587,11 @@ const partnerPool = [
 ];
 
 function personDetail(person, city, index) {
-  // Personas reales: solo lo publicado, sin añadidos.
+  // Guarda de la regla: una persona de fuente pública no recibe datos añadidos.
   if (person.source === "hub") {
     return {
       kind: "hub",
-      note: "Registro publicado en el directorio del HUB. El atlas no añade datos personales a las personas reales de la red."
+      note: "Registro de fuente pública. El atlas no añade datos personales a las personas reales de la red."
     };
   }
   const theme = city.themes[index % city.themes.length];
@@ -688,12 +691,11 @@ function awardDetail(award, city, cityIndex) {
 
 const HUB_CITIES = rawCities.map((city, cityIndex) => {
   const people = [
-    ...(hubPeople[city.id] || []).map(person => ({
+    ...(rosterPeople[city.id] || []).map(person => ({
       ...person,
-      source: "hub",
+      source: "demo",
       initials: initials(person.name),
-      organization: city.institution,
-      sourceUrl: HUB_DIRECTORY_URL
+      organization: city.institution
     })),
     ...city.demoPeople.map(person => ({
       ...person,

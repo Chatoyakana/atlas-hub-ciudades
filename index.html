@@ -169,7 +169,7 @@
 
         <div class="city-list" id="cityList" role="group" aria-label="Ciudades filtradas"></div>
         <div class="source-strip">
-          <span class="source-dot source-dot--hub"></span> Verificado en HUB
+          <span class="source-dot source-dot--hub"></span> Fuente HUB
           <span class="source-dot source-dot--demo"></span> Contenido demo
         </div>
       </aside>
@@ -341,22 +341,27 @@
         <p class="dialog-eyebrow">TRANSPARENCIA DEL PROTOTIPO</p>
         <h2>Sobre los datos de este atlas</h2>
         <p>
-          Esta versión combina registros públicos del directorio del HUB con contenido sintético para
-          completar y probar la experiencia.
+          Esta versión combina registros públicos del directorio del HUB —instituciones y proyectos— con
+          contenido sintético para completar y probar la experiencia.
+        </p>
+        <p class="dialog-highlight">
+          Las <strong>personas son todas inventadas</strong>. El prototipo no incluye datos de personas
+          identificables: no los necesita para probar la experiencia, y versionarlos los volvería permanentes
+          en el historial del repositorio.
         </p>
         <div class="method-list">
           <div>
             <span class="source-dot source-dot--hub"></span>
             <p>
-              <strong>Fuente HUB</strong><br />Nombres, cargos e instituciones publicados en el directorio;
-              además de proyectos destacados en el sitio oficial.
+              <strong>Fuente HUB</strong><br />Instituciones nodo publicadas en el directorio y proyectos
+              destacados en el sitio oficial. Son datos de organización, no de personas.
             </p>
           </div>
           <div>
             <span class="source-dot source-dot--demo"></span>
             <p>
-              <strong>Contenido demo</strong><br />Datos base, fechas de adhesión, personas adicionales,
-              premios, programas e iniciativas. No deben interpretarse como datos oficiales.
+              <strong>Contenido demo</strong><br />Todas las personas, además de datos base, fechas de
+              adhesión, premios, programas e iniciativas. No deben interpretarse como datos oficiales.
             </p>
           </div>
           <div>
@@ -383,7 +388,7 @@
       </form>
     </dialog>
 
-    <script src="data/personas-hub.js"></script>
+    <script src="data/personas.js"></script>
     <script src="data.js"></script>
     <script src="app.js"></script>
   </body>

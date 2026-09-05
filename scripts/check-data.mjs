@@ -11,7 +11,7 @@ import vm from "node:vm";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const context = { window: {}, console };
 vm.createContext(context);
-for (const file of ["data/personas-hub.js", "data.js"]) {
+for (const file of ["data/personas.js", "data.js"]) {
   vm.runInContext(readFileSync(join(root, file), "utf8"), context, { filename: file });
 }
 
@@ -77,6 +77,26 @@ check(
 
 const strayCoordinates = atlas.cities.filter(city => Math.abs(city.lat) > 90 || Math.abs(city.lon) > 180);
 check("las coordenadas están en rango", strayCoordinates.length === 0);
+
+console.log("\nDatos personales");
+// El prototipo no debe contener personas identificables: si alguien vuelve a
+// introducir nombres de fuente pública, el CI tiene que decirlo.
+const people = atlas.cities.flatMap(city => city.people);
+const sourcedPeople = people.filter(person => person.source !== "demo");
+check(
+  "ninguna persona se declara de fuente pública",
+  sourcedPeople.length === 0,
+  sourcedPeople.map(person => person.name).join(", ")
+);
+
+const realContacts = people.filter(
+  person => person.detail?.contact && !person.detail.contact.endsWith(".test")
+);
+check(
+  "los contactos usan el dominio reservado .test",
+  realContacts.length === 0,
+  realContacts.map(person => person.detail.contact).join(", ")
+);
 
 console.log(
   `\n${atlas.cities.length} ciudades · ${countries.size} países · ` +

@@ -29,7 +29,7 @@ Prototipo navegable de exploración cartográfica para la red del HUB de Ciudade
 
 La interfaz distingue dos tipos de registro:
 
-- **Fuente HUB:** nombres, cargos e instituciones publicados en el [directorio oficial](https://hubdeciudades.org/directorio/), además de algunos proyectos destacados en el sitio del HUB.
+- **Fuente HUB:** instituciones nodo publicadas en el [directorio oficial](https://hubdeciudades.org/directorio/) y algunos proyectos destacados en el sitio del HUB. Son datos de organización, no de personas.
 - **Demo:** datos base, fechas de adhesión, personas adicionales, premios, programas e iniciativas creados para probar el prototipo. No deben interpretarse como información oficial.
 
 La cartografía utiliza geometrías simplificadas de **Natural Earth**, escala 1:110m
@@ -56,26 +56,29 @@ en lugar de ser directa.
 
 ## Datos personales
 
-`data/personas-hub.js` contiene nombres, cargos e instituciones de 25 personas
-identificables, tomados del [directorio público del HUB](https://hubdeciudades.org/directorio/).
-Son datos de fuente pública, pero versionarlos en Git los vuelve permanentes: el
-historial los conserva aunque el directorio cambie.
+**El prototipo no contiene datos de personas identificables.** Las 51 personas que
+aparecen en el atlas son inventadas, incluidas las 25 que antes recogían nombres
+del directorio público del HUB.
 
-Por eso el archivo está separado del resto del modelo, y la aplicación funciona con
-él vacío: si se elimina su contenido, el atlas carga igual y solo muestra las
-personas de demostración. Cualquier solicitud de rectificación o supresión se aplica
-ahí, en un único lugar.
+Se cambiaron a propósito. Una demostración no necesita personas reales para probar
+la experiencia, y versionarlas en Git las volvía permanentes: el historial las
+conserva aunque el directorio cambie o alguien pida su baja, y un `git revert` no
+las borra. Los cargos sí se conservan, porque describen funciones institucionales
+y no identifican a nadie.
 
-Por la misma razón, **el atlas no inventa nada sobre estas personas**. Su ficha
-muestra solo lo que el directorio publica —nombre, cargo, institución y enlace a
-la fuente—. Las biografías, formaciones y contactos que aparecen en el prototipo
-se generan únicamente para las personas de demostración, que son sintéticas, y
-usan el dominio reservado `.test` para que ningún correo pueda confundirse con
-uno real.
+El sello **Fuente HUB** queda para instituciones y proyectos, que son datos de
+organización publicados por el HUB. Ninguna persona lo lleva.
 
-Si detectas un dato tuyo que quieres corregir o retirar, abre una incidencia en el
-repositorio o escribe a quien lo mantiene; se aplica sobre ese archivo y se refleja
-en el siguiente despliegue.
+Los correos de las fichas usan el dominio reservado `.test`, que no puede existir
+en internet, para que ninguno pueda confundirse con uno real.
+
+`data/personas.js` sigue siendo un archivo aparte aunque ya no contenga datos
+sensibles: es el lugar donde entrarían personas reales si el atlas se conectara a
+una fuente administrable, y la aplicación arranca con él vacío. Si eso llega a
+ocurrir, antes hay que resolver dos cosas: quién atiende una solicitud de
+rectificación o supresión y en qué plazo, y mantener la regla que ya está escrita
+en `data.js` —a una persona real no se le genera biografía, formación ni
+contacto—.
 
 ## Ejecutar localmente
 
@@ -95,7 +98,7 @@ Luego abre `http://localhost:4173`.
 - `index.html`: estructura de la aplicación.
 - `styles.css`: sistema visual y diseño adaptable.
 - `data.js`: modelo de conocimiento y contenido del prototipo.
-- `data/personas-hub.js`: datos personales tomados del directorio público, aislados a propósito (ver más abajo).
+- `data/personas.js`: listado de personas, íntegramente sintético y aislado a propósito (ver más abajo).
 - `app.js`: filtros, mapa, paneles, exportación e interacciones.
 - `data/latam-countries.geojson`: capa cartográfica local.
 - `assets/hub-mark.png`: marca gráfica usada en la cabecera.
@@ -133,7 +136,7 @@ de render. Lo mismo con las conexiones que apuntan a una ciudad inexistente.
 El código se publica bajo licencia MIT y el contenido bajo
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.es), de modo que
 cualquier ciudad de la red pueda reutilizarlo citando la fuente. Quedan fuera
-los datos personales del directorio del HUB y la cartografía de Natural Earth
+la cartografía de Natural Earth
 —dominio público—, que conservan su propia procedencia. Ver [LICENSE](LICENSE).
 
 ## Próxima fase sugerida

@@ -3538,3 +3538,15 @@ svg {
     margin: 0 0 3pt;
   }
 }
+
+/* Aviso destacado dentro del diálogo de método: es la afirmación que más
+   importa de esa ventana, así que no puede leerse como un párrafo más. */
+.dialog-card .dialog-highlight {
+  margin: 4px 0 2px;
+  padding: 10px 13px;
+  border-left: 2px solid var(--hub-orange);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--hub-orange-soft);
+  color: var(--ink-soft);
+  text-align: left;
+}
