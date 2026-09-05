@@ -3259,3 +3259,282 @@ svg {
     gap: 2px;
   }
 }
+
+/* ---------------------------------------------------------------
+   Exportación en PDF · hoja imprimible
+   --------------------------------------------------------------- */
+
+.export-json-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #f8fbfb;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.command-button--ghost {
+  background: white;
+}
+
+/* La hoja solo existe para el papel: en pantalla no ocupa nada. */
+.print-sheet {
+  display: none;
+}
+
+@media print {
+  /* Se imprime la ficha, no la aplicación. */
+  body > *:not(.print-sheet) {
+    display: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 15mm 14mm;
+  }
+
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+    background: white;
+  }
+
+  .print-sheet {
+    display: block;
+    color: #16323b;
+    font-family: var(--font);
+    font-size: 10.5pt;
+    line-height: 1.45;
+    /* Sin esto los navegadores descartan los fondos al imprimir. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 7pt;
+    border-bottom: 1.5pt solid #076d91;
+  }
+
+  .print-brand strong {
+    display: block;
+    font-size: 13pt;
+    letter-spacing: 0.06em;
+    color: #076d91;
+  }
+
+  .print-brand span,
+  .print-issued {
+    font-size: 8pt;
+    color: #6b8189;
+  }
+
+  .print-title {
+    margin-top: 14pt;
+  }
+
+  .print-country {
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #076d91;
+  }
+
+  .print-title h1 {
+    margin: 3pt 0 0;
+    font-size: 26pt;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: #122c35;
+  }
+
+  .print-locality {
+    margin: 2pt 0 0;
+    font-size: 10pt;
+    color: #6b8189;
+  }
+
+  .print-summary {
+    margin: 7pt 0 0;
+    font-size: 11pt;
+    line-height: 1.5;
+    max-width: 46em;
+  }
+
+  .print-themes {
+    margin: 6pt 0 0;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #076d91;
+  }
+
+  .print-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6pt;
+    margin-top: 12pt;
+  }
+
+  .print-kpis div {
+    border: 0.75pt solid #d4e3e6;
+    border-radius: 4pt;
+    padding: 6pt 8pt;
+  }
+
+  .print-kpis strong {
+    display: block;
+    font-size: 13pt;
+    color: #122c35;
+  }
+
+  .print-kpis span {
+    font-size: 7.5pt;
+    color: #6b8189;
+  }
+
+  .print-notice {
+    margin-top: 10pt;
+    padding: 7pt 9pt;
+    border-left: 2pt solid #fd7d12;
+    background: #fff6ee;
+    font-size: 8.5pt;
+    line-height: 1.4;
+  }
+
+  .print-section {
+    margin-top: 16pt;
+    /* Un encabezado nunca debe quedar solo al pie de una página. */
+    break-inside: avoid;
+  }
+
+  .print-section h2 {
+    margin: 0 0 7pt;
+    padding-bottom: 3pt;
+    border-bottom: 0.75pt solid #d4e3e6;
+    font-size: 11pt;
+    letter-spacing: -0.01em;
+    color: #122c35;
+  }
+
+  .print-section h2 span {
+    color: #8ba3aa;
+    font-weight: 400;
+  }
+
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+  }
+
+  .print-table th,
+  .print-table td {
+    text-align: left;
+    padding: 3.5pt 0;
+    border-bottom: 0.5pt solid #e6eff0;
+    vertical-align: top;
+  }
+
+  .print-table th {
+    width: 40%;
+    font-weight: 600;
+    color: #6b8189;
+  }
+
+  .print-table em {
+    font-style: normal;
+    color: #98abb1;
+    font-size: 8pt;
+  }
+
+  .print-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 6pt;
+  }
+
+  .print-list li {
+    break-inside: avoid;
+    padding-bottom: 5pt;
+    border-bottom: 0.5pt solid #eef4f5;
+  }
+
+  .print-list strong {
+    font-size: 10pt;
+    color: #122c35;
+  }
+
+  /* El sello de procedencia va en línea con el nombre; el resto, en bloque.
+     Sin :not(), esta regla gana por especificidad y lo baja de línea. */
+  .print-list li > span:not(.print-tag) {
+    display: block;
+    font-size: 9pt;
+  }
+
+  .print-entry {
+    break-inside: avoid;
+    margin-bottom: 9pt;
+  }
+
+  .print-entry h3 {
+    margin: 0 0 2pt;
+    font-size: 10pt;
+    color: #122c35;
+  }
+
+  .print-entry p {
+    margin: 0 0 2pt;
+    font-size: 9.5pt;
+  }
+
+  .print-muted {
+    color: #6b8189;
+    font-size: 8.5pt;
+  }
+
+  .print-tag {
+    display: inline-block;
+    padding: 0.5pt 4pt;
+    border-radius: 3pt;
+    background: #f1f0ea;
+    color: #7b7566;
+    font-size: 7pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    vertical-align: 1pt;
+  }
+
+  .print-tag--hub {
+    background: #e4f1f5;
+    color: #0a6d8e;
+  }
+
+  .print-foot {
+    margin-top: 18pt;
+    padding-top: 7pt;
+    border-top: 0.75pt solid #d4e3e6;
+    font-size: 8pt;
+    line-height: 1.45;
+    color: #6b8189;
+  }
+
+  .print-foot p {
+    margin: 0 0 3pt;
+  }
+}

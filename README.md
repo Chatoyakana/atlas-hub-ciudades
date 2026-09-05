@@ -12,6 +12,7 @@ Prototipo navegable de exploración cartográfica para la red del HUB de Ciudade
 - Vista de directorio: las 51 personas de la red con su institución, ciudad y procedencia, sujeta a los mismos filtros.
 - Filtros por país y tema de conocimiento.
 - Conexiones temáticas entre nodos.
+- Zoom automático a la ciudad seleccionada, y agrupación del Gran Santiago en un nodo que se abre al acercar.
 - Ficha por ciudad con:
   - datos base y tiempo en la red;
   - mínimo 3 personas;
@@ -20,7 +21,8 @@ Prototipo navegable de exploración cartográfica para la red del HUB de Ciudade
   - 1 programa;
   - 4 iniciativas;
   - premios y nivel de verificación.
-- Exportación de cada ficha en JSON.
+- Ficha de detalle para cada entidad: personas, instituciones, proyectos, programas, iniciativas y premios.
+- Exportación de cada ficha de ciudad en PDF, y de sus datos en JSON.
 - Diseño adaptable a escritorio y móvil.
 
 ## Transparencia de datos
@@ -40,6 +42,18 @@ caen a menos de 15 px entre sí —las tres comunas de Santiago quedan a poco m�
 entre ocho posiciones candidatas la que no choca con otras etiquetas, con los nodos
 ni con el borde del lienzo. No hay desplazamientos calibrados a mano.
 
+## Exportación en PDF
+
+El botón «Exportar PDF» compone una hoja con la ficha completa —no solo la
+pestaña abierta— y abre el diálogo de impresión, donde el navegador ofrece
+«Guardar como PDF».
+
+Se hace así, y no con una librería, por dos razones: el prototipo mantiene su
+promesa de no tener dependencias en tiempo de ejecución, y el resultado es un
+PDF con texto seleccionable y buscable, en vez de una captura rasterizada de la
+pantalla. La contrapartida es que la descarga pasa por el diálogo del navegador
+en lugar de ser directa.
+
 ## Datos personales
 
 `data/personas-hub.js` contiene nombres, cargos e instituciones de 25 personas
@@ -51,6 +65,13 @@ Por eso el archivo está separado del resto del modelo, y la aplicación funcion
 él vacío: si se elimina su contenido, el atlas carga igual y solo muestra las
 personas de demostración. Cualquier solicitud de rectificación o supresión se aplica
 ahí, en un único lugar.
+
+Por la misma razón, **el atlas no inventa nada sobre estas personas**. Su ficha
+muestra solo lo que el directorio publica —nombre, cargo, institución y enlace a
+la fuente—. Las biografías, formaciones y contactos que aparecen en el prototipo
+se generan únicamente para las personas de demostración, que son sintéticas, y
+usan el dominio reservado `.test` para que ningún correo pueda confundirse con
+uno real.
 
 Si detectas un dato tuyo que quieres corregir o retirar, abre una incidencia en el
 repositorio o escribe a quien lo mantiene; se aplica sobre ese archivo y se refleja

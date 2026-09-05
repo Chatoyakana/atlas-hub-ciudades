@@ -56,6 +56,7 @@
     directoryClose: document.getElementById("directoryClose"),
     entityDialog: document.getElementById("entityDialog"),
     entityCard: document.getElementById("entityCard"),
+    printSheet: document.getElementById("printSheet"),
     openDirectoryButton: document.getElementById("openDirectoryButton")
   };
 
@@ -1058,7 +1059,7 @@
       </div>
       <div class="detail-commandbar">
         <button class="command-button" type="button" data-action="share">${icon("share")} Compartir</button>
-        <button class="command-button" type="button" data-action="export">${icon("download")} Exportar ficha</button>
+        <button class="command-button" type="button" data-action="export-pdf">${icon("download")} Exportar PDF</button>
       </div>
       <div class="detail-tabs" role="tablist" aria-label="Secciones de la ficha">
         ${[
@@ -1215,6 +1216,11 @@
         <div class="quality-card__heading"><strong>Nivel de verificación</strong><span>${quality}% verificado</span></div>
         <div class="quality-track"><span style="width:${Math.max(quality, 4)}%"></span></div>
         <p>${verified} de ${records.length} registros de contenido tienen fuente pública vinculada. Los datos base continúan como demostración.</p>
+      </div>
+
+      <div class="export-json-row">
+        <span>¿Necesitas los datos en crudo?</span>
+        <button class="command-button command-button--ghost" type="button" data-action="export-json">${icon("download")} Descargar JSON</button>
       </div>
 
       <section class="section-block">
@@ -1586,7 +1592,10 @@
       .querySelector("[data-action='share']")
       ?.addEventListener("click", () => shareCity(city));
     els.detailContent
-      .querySelector("[data-action='export']")
+      .querySelector("[data-action='export-pdf']")
+      ?.addEventListener("click", () => exportCityPdf(city));
+    els.detailContent
+      .querySelector("[data-action='export-json']")
       ?.addEventListener("click", () => exportCity(city));
     els.detailContent.querySelectorAll("[data-related-city]").forEach(button => {
       button.addEventListener("click", () => selectCity(button.dataset.relatedCity));
@@ -1737,6 +1746,212 @@
     announceTimer = setTimeout(() => {
       els.statusAnnouncer.textContent = message;
     }, 60);
+  }
+
+  // Exportación en PDF.
+  //
+  // Sin librería: se compone una hoja imprimible con la ficha completa —no solo
+  // la pestaña abierta— y se manda a imprimir. El navegador ofrece "Guardar
+  // como PDF" y produce un documento con texto seleccionable y buscable, mejor
+  // resultado que rasterizar la pantalla, y mantiene la promesa de no añadir
+  // dependencias en tiempo de ejecución.
+  function printSection(title, count, body) {
+    return `
+      <section class="print-section">
+        <h2>${escapeHTML(title)}${count === undefined ? "" : ` <span>${count}</span>`}</h2>
+        ${body}
+      </section>`;
+  }
+
+  function printSourceTag(source) {
+    return source === "hub"
+      ? `<span class="print-tag print-tag--hub">Fuente HUB</span>`
+      : `<span class="print-tag">Demo</span>`;
+  }
+
+  function buildPrintSheet(city) {
+    const related = [...relatedCityIds(city.id)].map(id => cityById.get(id).name);
+    const records = [
+      ...city.people,
+      ...city.institutions,
+      ...city.projects,
+      ...city.programs,
+      ...city.initiatives,
+      ...city.awards
+    ];
+    const verified = records.filter(item => item.source === "hub").length;
+    const density = Math.round(city.population / city.area);
+
+    els.printSheet.innerHTML = `
+      <header class="print-head">
+        <div class="print-brand">
+          <strong>ATLAS HUB</strong>
+          <span>Atlas de conocimiento · HUB de Ciudades de América Latina y el Caribe</span>
+        </div>
+        <div class="print-issued">Ficha generada el ${formatDate(atlas.referenceDate, true)}</div>
+      </header>
+
+      <div class="print-title">
+        <span class="print-country">${escapeHTML(city.code)} · ${escapeHTML(city.country)}</span>
+        <h1>${escapeHTML(city.name)}</h1>
+        ${city.locality ? `<p class="print-locality">${escapeHTML(city.locality)}</p>` : ""}
+        <p class="print-summary">${escapeHTML(city.summary)}</p>
+        <p class="print-themes">${city.themes.map(theme => escapeHTML(theme)).join(" · ")}</p>
+      </div>
+
+      <div class="print-kpis">
+        <div><strong>${formatNumber(city.population)}</strong><span>Habitantes (demo)</span></div>
+        <div><strong>${formatNumber(city.area)} km²</strong><span>Superficie (demo)</span></div>
+        <div><strong>${city.people.length}</strong><span>Personas vinculadas</span></div>
+        <div><strong>${actionCount(city)}</strong><span>Acciones registradas</span></div>
+      </div>
+
+      <div class="print-notice">
+        Este documento combina registros publicados en el directorio del HUB con contenido de
+        demostración generado para probar el prototipo. Cada registro lleva su procedencia: los
+        marcados <strong>Demo</strong> no deben interpretarse como información oficial.
+      </div>
+
+      ${printSection(
+        "Datos base",
+        undefined,
+        `<table class="print-table">
+          <tbody>
+            <tr><th>Población</th><td>${formatNumber(city.population)} hab. <em>(demo)</em></td></tr>
+            <tr><th>Superficie</th><td>${formatNumber(city.area)} km² <em>(demo)</em></td></tr>
+            <tr><th>Densidad</th><td>${formatNumber(density)} hab./km² <em>(demo)</em></td></tr>
+            <tr><th>Elevación</th><td>${formatNumber(city.elevation)} m s. n. m. <em>(demo)</em></td></tr>
+            <tr><th>Coordenadas</th><td>${city.lat}, ${city.lon}</td></tr>
+            <tr><th>Ingreso a la red</th><td>${formatDate(city.joined, true)} · hace ${membershipDuration(city.joined)}</td></tr>
+            <tr><th>Última actualización</th><td>${formatDate(city.updated, true)}</td></tr>
+          </tbody>
+        </table>`
+      )}
+
+      ${printSection(
+        "Personas",
+        city.people.length,
+        `<ul class="print-list">
+          ${city.people
+            .map(
+              person => `
+            <li>
+              <strong>${escapeHTML(person.name)}</strong> ${printSourceTag(person.source)}
+              <span>${escapeHTML(person.role)}</span>
+              <span class="print-muted">${escapeHTML(person.organization)}</span>
+            </li>`
+            )
+            .join("")}
+        </ul>`
+      )}
+
+      ${printSection(
+        "Instituciones",
+        city.institutions.length,
+        `<ul class="print-list">
+          ${city.institutions
+            .map(
+              institution => `
+            <li>
+              <strong>${escapeHTML(institution.name)}</strong> ${printSourceTag(institution.source)}
+              <span>${escapeHTML(institution.type)}</span>
+              <span class="print-muted">${escapeHTML(institution.role)}</span>
+            </li>`
+            )
+            .join("")}
+        </ul>`
+      )}
+
+      ${printSection(
+        "Proyectos",
+        city.projects.length,
+        city.projects
+          .map(
+            project => `
+          <article class="print-entry">
+            <h3>${escapeHTML(project.title)} ${printSourceTag(project.source)}</h3>
+            <p>${escapeHTML(project.description)}</p>
+            <p class="print-muted">${escapeHTML(project.status)} · ${escapeHTML(project.detail.period)} · responsable: ${escapeHTML(project.detail.lead)}</p>
+            <p class="print-muted">Hitos: ${project.detail.milestones.map(m => `${escapeHTML(m.label)}${m.done ? " ✓" : ""}`).join(" · ")}</p>
+          </article>`
+          )
+          .join("")
+      )}
+
+      ${printSection(
+        "Programas",
+        city.programs.length,
+        city.programs
+          .map(
+            program => `
+          <article class="print-entry">
+            <h3>${escapeHTML(program.title)} ${printSourceTag(program.source)}</h3>
+            <p>${escapeHTML(program.description)}</p>
+            <p class="print-muted">${escapeHTML(program.status)} · ${escapeHTML(program.detail.duration)} · ${program.participants} participantes</p>
+          </article>`
+          )
+          .join("")
+      )}
+
+      ${printSection(
+        "Iniciativas",
+        city.initiatives.length,
+        city.initiatives
+          .map(
+            initiative => `
+          <article class="print-entry">
+            <h3>${escapeHTML(initiative.title)} ${printSourceTag(initiative.source)}</h3>
+            <p>${escapeHTML(initiative.description)}</p>
+            <p class="print-muted">${escapeHTML(initiative.status)} · ${escapeHTML(initiative.detail.duration)} · ${initiative.detail.participants} participantes</p>
+          </article>`
+          )
+          .join("")
+      )}
+
+      ${printSection(
+        "Premios y reconocimientos",
+        city.awards.length,
+        city.awards
+          .map(
+            award => `
+          <article class="print-entry">
+            <h3>${escapeHTML(award.title)} ${printSourceTag(award.source)}</h3>
+            <p class="print-muted">${escapeHTML(award.organization)} · ${award.year} · ${escapeHTML(award.detail.category)}</p>
+            <p>${escapeHTML(award.detail.reason)}</p>
+          </article>`
+          )
+          .join("")
+      )}
+
+      ${printSection(
+        "Conexiones en la red",
+        related.length,
+        related.length
+          ? `<p>${escapeHTML(city.name)} comparte temas y aprendizajes con: ${related.map(name => escapeHTML(name)).join(" · ")}.</p>`
+          : `<p class="print-muted">Aún no se han modelado conexiones directas para esta ciudad.</p>`
+      )}
+
+      <footer class="print-foot">
+        <p><strong>Procedencia.</strong> ${verified} de ${records.length} registros de esta ficha tienen fuente pública vinculada en el directorio del HUB (${escapeHTML(atlas.sources.directory)}). El resto es contenido de demostración.</p>
+        <p><strong>Cartografía.</strong> ${escapeHTML(atlas.sources.map)}.</p>
+        <p class="print-muted">Atlas de conocimiento · HUB de Ciudades · prototipo</p>
+      </footer>`;
+  }
+
+  function exportCityPdf(city) {
+    buildPrintSheet(city);
+    // El título del documento es el nombre que el navegador propone al guardar.
+    const originalTitle = document.title;
+    document.title = `Atlas HUB · ${city.name}`;
+    const restore = () => {
+      document.title = originalTitle;
+      window.removeEventListener("afterprint", restore);
+    };
+    window.addEventListener("afterprint", restore);
+    showToast("Elige «Guardar como PDF» en el diálogo de impresión.");
+    window.print();
+    // Salvaguarda: algunos navegadores no emiten afterprint.
+    setTimeout(restore, 4000);
   }
 
   function showToast(message) {
