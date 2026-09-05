@@ -55,8 +55,12 @@
     openDirectoryButton: document.getElementById("openDirectoryButton")
   };
 
-  const allThemes = [...new Set(cities.flatMap(city => city.themes))].sort((a, b) => a.localeCompare(b, "es"));
-  const allCountries = [...new Set(cities.map(city => city.country))].sort((a, b) => a.localeCompare(b, "es"));
+  const allThemes = [...new Set(cities.flatMap(city => city.themes))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
+  const allCountries = [...new Set(cities.map(city => city.country))].sort((a, b) =>
+    a.localeCompare(b, "es")
+  );
   const memberCountries = new Set(allCountries);
   const themeFrequency = allThemes
     .map(theme => ({ theme, count: cities.filter(city => city.themes.includes(theme)).length }))
@@ -64,7 +68,7 @@
 
   const hashCity = new URLSearchParams(location.hash.replace(/^#/, "")).get("ciudad");
   const state = {
-    selectedId: cityById.has(hashCity) ? hashCity : (window.innerWidth > 1120 ? "medellin" : null),
+    selectedId: cityById.has(hashCity) ? hashCity : window.innerWidth > 1120 ? "medellin" : null,
     search: "",
     country: "all",
     theme: "all",
@@ -106,23 +110,32 @@
   function icon(name, className = "") {
     const paths = {
       info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
-      users: '<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 9a2.5 2.5 0 0 1 0 5M17 17.5a4.5 4.5 0 0 1 4 1.5"/>',
+      users:
+        '<circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 9a2.5 2.5 0 0 1 0 5M17 17.5a4.5 4.5 0 0 1 4 1.5"/>',
       building: '<path d="M4 21V7l8-4 8 4v14M8 10h2M14 10h2M8 14h2M14 14h2M9 21v-3h6v3"/>',
       project: '<path d="M4 7h7l2 2h7v10H4V7Z"/><path d="M4 10h16"/>',
       program: '<path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
-      spark: '<path d="m12 3 1.5 4.2L18 9l-4.5 1.8L12 15l-1.5-4.2L6 9l4.5-1.8L12 3Z"/><path d="m18.5 15 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/>',
-      people: '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0M14 19a4 4 0 0 1 8 0"/>',
-      population: '<path d="M3 21V9l6-4v4l6-4v16"/><path d="M15 21V11l6 3v7M3 21h18"/><path d="M6 13h1.5M6 17h1.5M11 13h1.5M11 17h1.5"/>',
+      spark:
+        '<path d="m12 3 1.5 4.2L18 9l-4.5 1.8L12 15l-1.5-4.2L6 9l4.5-1.8L12 3Z"/><path d="m18.5 15 .8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/>',
+      people:
+        '<circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M2.5 19a5.5 5.5 0 0 1 11 0M14 19a4 4 0 0 1 8 0"/>',
+      population:
+        '<path d="M3 21V9l6-4v4l6-4v16"/><path d="M15 21V11l6 3v7M3 21h18"/><path d="M6 13h1.5M6 17h1.5M11 13h1.5M11 17h1.5"/>',
       area: '<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/>',
       mountain: '<path d="m3 20 6.5-11 3.3 5 2.4-4L21 20H3Z"/><path d="m7.7 12 1.8 2 1.6-1.9"/>',
-      density: '<circle cx="7" cy="7" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 7h6M7 9v6M17 9v6M9 17h6"/>',
-      network: '<circle cx="6" cy="7" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="m8 7 8-.7M7 9l4 7M17 8l-4 8"/>',
+      density:
+        '<circle cx="7" cy="7" r="2"/><circle cx="17" cy="7" r="2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 7h6M7 9v6M17 9v6M9 17h6"/>',
+      network:
+        '<circle cx="6" cy="7" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><path d="m8 7 8-.7M7 9l4 7M17 8l-4 8"/>',
       download: '<path d="M12 3v12M7 10l5 5 5-5M4 20h16"/>',
-      share: '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"/>',
+      share:
+        '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="m8.2 10.8 7.6-4.5M8.2 13.2l7.6 4.5"/>',
       close: '<path d="m6 6 12 12M18 6 6 18"/>',
-      award: '<circle cx="12" cy="8" r="5"/><path d="m8.5 12-1 9 4.5-2 4.5 2-1-9"/><path d="m10 8 1.3 1.2L14 6.5"/>',
+      award:
+        '<circle cx="12" cy="8" r="5"/><path d="m8.5 12-1 9 4.5-2 4.5 2-1-9"/><path d="m10 8 1.3 1.2L14 6.5"/>',
       calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>',
-      globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.3 3 14.7 0 18M12 3c-3 3.3-3 14.7 0 18"/>',
+      globe:
+        '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.3 3 14.7 0 18M12 3c-3 3.3-3 14.7 0 18"/>',
       search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>'
     };
     return `<svg class="${className}" viewBox="0 0 24 24" aria-hidden="true">${paths[name] || paths.info}</svg>`;
@@ -143,15 +156,16 @@
 
   function formatDate(dateValue, includeDay = false) {
     const date = new Date(`${dateValue}T12:00:00`);
-    return new Intl.DateTimeFormat("es-CO", includeDay
-      ? { day: "numeric", month: "long", year: "numeric" }
-      : { month: "long", year: "numeric" }
+    return new Intl.DateTimeFormat(
+      "es-CO",
+      includeDay ? { day: "numeric", month: "long", year: "numeric" } : { month: "long", year: "numeric" }
     ).format(date);
   }
 
   function membershipDuration(dateValue) {
     const start = new Date(`${dateValue}T12:00:00`);
-    let months = (referenceDate.getFullYear() - start.getFullYear()) * 12 + referenceDate.getMonth() - start.getMonth();
+    let months =
+      (referenceDate.getFullYear() - start.getFullYear()) * 12 + referenceDate.getMonth() - start.getMonth();
     if (referenceDate.getDate() < start.getDate()) months -= 1;
     months = Math.max(0, months);
     const years = Math.floor(months / 12);
@@ -177,19 +191,23 @@
   }
 
   function buildSearchableText(city) {
-    return normalize([
-      city.name,
-      city.locality,
-      city.country,
-      city.summary,
-      ...city.themes,
-      ...city.people.flatMap(person => [person.name, person.role]),
-      ...city.institutions.flatMap(inst => [inst.name, inst.type]),
-      ...city.projects.flatMap(project => [project.title, project.description]),
-      ...city.programs.flatMap(program => [program.title, program.description]),
-      ...city.initiatives.flatMap(initiative => [initiative.title, initiative.description]),
-      ...city.awards.map(award => award.title)
-    ].filter(Boolean).join(" "));
+    return normalize(
+      [
+        city.name,
+        city.locality,
+        city.country,
+        city.summary,
+        ...city.themes,
+        ...city.people.flatMap(person => [person.name, person.role]),
+        ...city.institutions.flatMap(inst => [inst.name, inst.type]),
+        ...city.projects.flatMap(project => [project.title, project.description]),
+        ...city.programs.flatMap(program => [program.title, program.description]),
+        ...city.initiatives.flatMap(initiative => [initiative.title, initiative.description]),
+        ...city.awards.map(award => award.title)
+      ]
+        .filter(Boolean)
+        .join(" ")
+    );
   }
 
   function getFilteredCities() {
@@ -213,13 +231,16 @@
   function populateFilters() {
     els.countryFilter.insertAdjacentHTML(
       "beforeend",
-      allCountries.map(country => `<option value="${escapeHTML(country)}">${escapeHTML(country)}</option>`).join("")
+      allCountries
+        .map(country => `<option value="${escapeHTML(country)}">${escapeHTML(country)}</option>`)
+        .join("")
     );
 
     els.themeChips.innerHTML = [
       `<button type="button" class="theme-chip is-active" data-theme="all">Todos</button>`,
-      ...themeFrequency.map(({ theme, count }) =>
-        `<button type="button" class="theme-chip" data-theme="${escapeHTML(theme)}">${escapeHTML(theme)} · ${count}</button>`
+      ...themeFrequency.map(
+        ({ theme, count }) =>
+          `<button type="button" class="theme-chip" data-theme="${escapeHTML(theme)}">${escapeHTML(theme)} · ${count}</button>`
       )
     ].join("");
   }
@@ -247,7 +268,9 @@
       return;
     }
 
-    els.cityList.innerHTML = filtered.map(city => `
+    els.cityList.innerHTML = filtered
+      .map(
+        city => `
       <button class="city-item ${state.selectedId === city.id ? "is-selected" : ""}" type="button" data-city-id="${escapeHTML(city.id)}"${state.selectedId === city.id ? ' aria-current="true"' : ""}>
         <span class="city-item__marker">${escapeHTML(city.code)}</span>
         <span class="city-item__copy">
@@ -256,7 +279,9 @@
         </span>
         <span class="city-item__count" title="${actionCount(city)} acciones registradas">${actionCount(city)}</span>
       </button>
-    `).join("");
+    `
+      )
+      .join("");
 
     els.cityList.querySelectorAll("[data-city-id]").forEach(button => {
       button.addEventListener("click", () => selectCity(button.dataset.cityId));
@@ -337,7 +362,8 @@
     const lat0 = PROJECTION_CENTER.lat * DEG;
     const phi = lat * DEG;
     const dLambda = lon * DEG - lon0;
-    const denominator = 1 + Math.sin(lat0) * Math.sin(phi) + Math.cos(lat0) * Math.cos(phi) * Math.cos(dLambda);
+    const denominator =
+      1 + Math.sin(lat0) * Math.sin(phi) + Math.cos(lat0) * Math.cos(phi) * Math.cos(dLambda);
     const k = Math.sqrt(2 / Math.max(denominator, 1e-9));
     return [
       k * Math.cos(phi) * Math.sin(dLambda),
@@ -353,7 +379,10 @@
   const MAX_CANVAS = { width: 860, height: 760 };
 
   function computeFit(coordinates) {
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      maxX = -Infinity,
+      minY = Infinity,
+      maxY = -Infinity;
     coordinates.forEach(coordinate => {
       const [x, y] = laea(coordinate);
       if (x < minX) minX = x;
@@ -388,12 +417,15 @@
   function collectCoordinates(features) {
     const coordinates = cities.map(city => [city.lon, city.lat]);
     features.forEach(feature => {
-      const polygons = feature.geometry.type === "Polygon"
-        ? [feature.geometry.coordinates]
-        : feature.geometry.coordinates;
-      polygons.forEach(polygon => polygon.forEach(ring => ring.forEach(coordinate => {
-        coordinates.push(coordinate);
-      })));
+      const polygons =
+        feature.geometry.type === "Polygon" ? [feature.geometry.coordinates] : feature.geometry.coordinates;
+      polygons.forEach(polygon =>
+        polygon.forEach(ring =>
+          ring.forEach(coordinate => {
+            coordinates.push(coordinate);
+          })
+        )
+      );
     });
     return coordinates;
   }
@@ -446,9 +478,10 @@
       const cx = members.reduce((sum, index) => sum + base[index].x, 0) / members.length;
       const cy = members.reduce((sum, index) => sum + base[index].y, 0) / members.length;
       // Ordenar por angulo real conserva la disposicion geografica dentro del abanico.
-      const ordered = [...members].sort((a, b) =>
-        Math.atan2(base[a].y - cy, base[a].x - cx) - Math.atan2(base[b].y - cy, base[b].x - cx) ||
-        base[a].id.localeCompare(base[b].id)
+      const ordered = [...members].sort(
+        (a, b) =>
+          Math.atan2(base[a].y - cy, base[a].x - cx) - Math.atan2(base[b].y - cy, base[b].x - cx) ||
+          base[a].id.localeCompare(base[b].id)
       );
       const radius = SPREAD_RADIUS + (ordered.length - 2) * 6;
       ordered.forEach((index, position) => {
@@ -472,10 +505,21 @@
 
   function geometryToPath(geometry) {
     const polygons = geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
-    return polygons.map(polygon => polygon.map(ring => ring.map((coord, index) => {
-      const [x, y] = project(coord);
-      return `${index ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(" ") + " Z").join(" ")).join(" ");
+    return polygons
+      .map(polygon =>
+        polygon
+          .map(
+            ring =>
+              ring
+                .map((coord, index) => {
+                  const [x, y] = project(coord);
+                  return `${index ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`;
+                })
+                .join(" ") + " Z"
+          )
+          .join(" ")
+      )
+      .join(" ");
   }
 
   function createSvg(tag, attributes = {}) {
@@ -506,14 +550,19 @@
     buildConnections();
     buildMarkers();
     // Conexiones y nodos por encima de los paises.
-    els.networkMap.querySelector("#mapViewport").append(els.countryLayer, els.connectionLayer, els.markerLayer);
+    els.networkMap
+      .querySelector("#mapViewport")
+      .append(els.countryLayer, els.connectionLayer, els.markerLayer);
     renderMapState(getFilteredCities());
   }
 
   // M-02: avisar en vez de dibujar en silencio una ciudad fuera de la region.
   function warnAboutStrayCities() {
     if (!mapFeatures.length) return;
-    let minLon = Infinity, maxLon = -Infinity, minLat = Infinity, maxLat = -Infinity;
+    let minLon = Infinity,
+      maxLon = -Infinity,
+      minLat = Infinity,
+      maxLat = -Infinity;
     mapFeatures.forEach(feature => {
       const box = feature.bbox;
       if (!box) return;
@@ -523,8 +572,8 @@
       maxLat = Math.max(maxLat, box[3]);
     });
     if (!Number.isFinite(minLon)) return;
-    const stray = cities.filter(city =>
-      city.lon < minLon || city.lon > maxLon || city.lat < minLat || city.lat > maxLat
+    const stray = cities.filter(
+      city => city.lon < minLon || city.lon > maxLon || city.lat < minLat || city.lat > maxLat
     );
     if (stray.length) {
       console.warn(
@@ -544,9 +593,7 @@
         "data-country-name": countryName,
         tabindex: memberCountries.has(countryName) ? "0" : "-1",
         role: memberCountries.has(countryName) ? "button" : "img",
-        "aria-label": memberCountries.has(countryName)
-          ? `Filtrar ciudades de ${countryName}`
-          : countryName
+        "aria-label": memberCountries.has(countryName) ? `Filtrar ciudades de ${countryName}` : countryName
       });
       const title = createSvg("title");
       title.textContent = countryName;
@@ -621,9 +668,7 @@
   function labelBox(pos, candidate, width) {
     const x = pos.x + candidate.dx;
     const y = pos.y + candidate.dy;
-    const left = candidate.anchor === "start" ? x
-      : candidate.anchor === "end" ? x - width
-      : x - width / 2;
+    const left = candidate.anchor === "start" ? x : candidate.anchor === "end" ? x - width : x - width / 2;
     return { x1: left - 2, y1: y - LABEL_HEIGHT, x2: left + width + 2, y2: y + 3 };
   }
 
@@ -634,8 +679,12 @@
     }
     // Chocar con otra etiqueta se penaliza mas que rozar un nodo: dos textos
     // superpuestos son ilegibles, un texto sobre un circulo todavia se lee.
-    placed.forEach(other => { cost += overlapArea(box, other) * 3; });
-    nodes.forEach(node => { cost += overlapArea(box, node); });
+    placed.forEach(other => {
+      cost += overlapArea(box, other) * 3;
+    });
+    nodes.forEach(node => {
+      cost += overlapArea(box, node);
+    });
     return cost;
   }
 
@@ -644,11 +693,16 @@
   function layoutLabels() {
     const nodes = cities.map(city => {
       const pos = markerPosition(city);
-      return { x1: pos.x - NODE_RADIUS, y1: pos.y - NODE_RADIUS, x2: pos.x + NODE_RADIUS, y2: pos.y + NODE_RADIUS };
+      return {
+        x1: pos.x - NODE_RADIUS,
+        y1: pos.y - NODE_RADIUS,
+        x2: pos.x + NODE_RADIUS,
+        y2: pos.y + NODE_RADIUS
+      };
     });
     const placed = [];
-    const order = [...cities].sort((a, b) =>
-      actionCount(b) - actionCount(a) || a.name.localeCompare(b.name, "es")
+    const order = [...cities].sort(
+      (a, b) => actionCount(b) - actionCount(a) || a.name.localeCompare(b.name, "es")
     );
 
     order.forEach(city => {
@@ -691,19 +745,27 @@
       });
 
       if (Math.abs(pos.x - pos.anchorX) > 0.5 || Math.abs(pos.y - pos.anchorY) > 0.5) {
-        group.appendChild(createSvg("line", {
-          x1: pos.anchorX.toFixed(1),
-          y1: pos.anchorY.toFixed(1),
-          x2: pos.x.toFixed(1),
-          y2: pos.y.toFixed(1),
-          class: "marker-leader"
-        }));
+        group.appendChild(
+          createSvg("line", {
+            x1: pos.anchorX.toFixed(1),
+            y1: pos.anchorY.toFixed(1),
+            x2: pos.x.toFixed(1),
+            y2: pos.y.toFixed(1),
+            class: "marker-leader"
+          })
+        );
       }
 
       group.append(
         createSvg("circle", { cx: pos.x, cy: pos.y, r: 23, class: "marker-hit" }),
         createSvg("circle", { cx: pos.x, cy: pos.y, r: 18, class: "marker-pulse" }),
-        createSvg("circle", { cx: pos.x, cy: pos.y, r: 10.5, class: "marker-ring", filter: "url(#markerShadow)" }),
+        createSvg("circle", {
+          cx: pos.x,
+          cy: pos.y,
+          r: 10.5,
+          class: "marker-ring",
+          filter: "url(#markerShadow)"
+        }),
         createSvg("circle", { cx: pos.x, cy: pos.y, r: 6.3, class: "marker-core" }),
         createSvg("circle", { cx: pos.x, cy: pos.y, r: 1.8, class: "marker-center" })
       );
@@ -813,14 +875,20 @@
       els.mapOverviewCard.classList.add("is-city");
       els.overviewHeadline.textContent = selected.name;
       els.overviewText.textContent = `${selected.country} · en la red hace ${membershipDuration(selected.joined)}.`;
-      els.overviewThemes.innerHTML = selected.themes.slice(0, 2).map(theme => `<span>${escapeHTML(theme)}</span>`).join("");
+      els.overviewThemes.innerHTML = selected.themes
+        .slice(0, 2)
+        .map(theme => `<span>${escapeHTML(theme)}</span>`)
+        .join("");
     } else {
       els.mapOverviewCard.classList.remove("is-city");
       els.overviewHeadline.textContent = `${filtered.length} ${filtered.length === 1 ? "ciudad visible" : "ciudades visibles"}`;
       els.overviewText.textContent = filtered.length
         ? "Haz clic en un nodo para explorar su ecosistema de conocimiento."
         : "Ajusta los filtros para volver a mostrar nodos de la red.";
-      els.overviewThemes.innerHTML = themeFrequency.slice(0, 3).map(item => `<span>${escapeHTML(item.theme)}</span>`).join("");
+      els.overviewThemes.innerHTML = themeFrequency
+        .slice(0, 3)
+        .map(item => `<span>${escapeHTML(item.theme)}</span>`)
+        .join("");
     }
   }
 
@@ -846,7 +914,12 @@
           ["ecosistema", "Ecosistema"],
           ["acciones", "Acciones"],
           ["datos", "Datos y premios"]
-        ].map(([id, label]) => `<button class="detail-tab ${state.detailTab === id ? "is-active" : ""}" type="button" role="tab" aria-selected="${state.detailTab === id}" data-detail-tab="${id}">${label}</button>`).join("")}
+        ]
+          .map(
+            ([id, label]) =>
+              `<button class="detail-tab ${state.detailTab === id ? "is-active" : ""}" type="button" role="tab" aria-selected="${state.detailTab === id}" data-detail-tab="${id}">${label}</button>`
+          )
+          .join("")}
       </div>`;
   }
 
@@ -887,11 +960,15 @@
       <section class="section-block">
         <div class="section-heading"><h3>Capacidades destacadas</h3><span>Índice demo</span></div>
         <div class="topic-bars">
-          ${strengths.map(item => `
+          ${strengths
+            .map(
+              item => `
             <div class="topic-bar">
               <div class="topic-bar__label"><span>${escapeHTML(item.theme)}</span><span>${item.value}%</span></div>
               <div class="topic-bar__track"><div class="topic-bar__fill" style="width:${item.value}%"></div></div>
-            </div>`).join("")}
+            </div>`
+            )
+            .join("")}
         </div>
       </section>
 
@@ -910,18 +987,24 @@
       <section>
         <div class="section-heading"><h3>Personas y actores</h3><span>${city.people.length} perfiles</span></div>
         <div class="person-list">
-          ${city.people.map(person => `
+          ${city.people
+            .map(
+              person => `
             <article class="person-card">
               <span class="person-avatar">${escapeHTML(person.initials)}</span>
               <span class="person-copy"><strong>${escapeHTML(person.name)}</strong><span>${escapeHTML(person.role)}</span></span>
               ${sourceBadge(person.source)}
-            </article>`).join("")}
+            </article>`
+            )
+            .join("")}
         </div>
       </section>
       <section class="section-block">
         <div class="section-heading"><h3>Instituciones involucradas</h3><span>${city.institutions.length} nodos</span></div>
         <div class="institution-list">
-          ${city.institutions.map(institution => `
+          ${city.institutions
+            .map(
+              institution => `
             <article class="institution-card">
               <span class="institution-icon">${icon("building")}</span>
               <span class="institution-copy">
@@ -930,7 +1013,9 @@
                 <em>${escapeHTML(institution.role)}</em>
               </span>
               ${sourceBadge(institution.source)}
-            </article>`).join("")}
+            </article>`
+            )
+            .join("")}
         </div>
       </section>`;
   }
@@ -997,12 +1082,16 @@
       <section class="section-block">
         <div class="section-heading"><h3>Premios y reconocimientos</h3><span>${city.awards.length} registro</span></div>
         <div class="award-list">
-          ${city.awards.map(award => `
+          ${city.awards
+            .map(
+              award => `
             <article class="award-card">
               <span class="award-icon">${icon("award")}</span>
               <span><strong>${escapeHTML(award.title)}</strong><p>${escapeHTML(award.organization)} · ${award.year}</p></span>
               ${sourceBadge(award.source)}
-            </article>`).join("")}
+            </article>`
+            )
+            .join("")}
         </div>
       </section>`;
   }
@@ -1012,9 +1101,7 @@
   // su ciudad y la procedencia del registro, sujeta a los mismos filtros.
   const directoryPeople = cities
     .flatMap(city => city.people.map(person => ({ ...person, city })))
-    .sort((a, b) =>
-      a.name.localeCompare(b.name, "es", { sensitivity: "base" })
-    );
+    .sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }));
 
   function renderDirectory() {
     const visible = directoryPeople.filter(entry => state.filteredIds.has(entry.city.id));
@@ -1025,7 +1112,9 @@
       : "Sin personas para los filtros activos";
 
     els.directoryEmpty.hidden = visible.length > 0;
-    els.directoryBody.innerHTML = visible.map(entry => `
+    els.directoryBody.innerHTML = visible
+      .map(
+        entry => `
       <tr>
         <th scope="row">
           <span class="directory-person">
@@ -1043,7 +1132,9 @@
           </button>
         </td>
         <td>${sourceBadge(entry.source)}</td>
-      </tr>`).join("");
+      </tr>`
+      )
+      .join("");
 
     els.directoryBody.querySelectorAll("[data-directory-city]").forEach(button => {
       button.addEventListener("click", () => {
@@ -1099,11 +1190,16 @@
           <section class="section-block">
             <div class="section-heading"><h3>Temas más compartidos</h3><span>Red completa</span></div>
             <div class="topic-bars">
-              ${themeFrequency.slice(0, 5).map((item, index) => `
+              ${themeFrequency
+                .slice(0, 5)
+                .map(
+                  (item, index) => `
                 <div class="topic-bar">
                   <div class="topic-bar__label"><span>${escapeHTML(item.theme)}</span><span>${item.count} ciudades</span></div>
                   <div class="topic-bar__track"><div class="topic-bar__fill" style="width:${Math.round((item.count / themeFrequency[0].count) * (92 - index * 3))}%"></div></div>
-                </div>`).join("")}
+                </div>`
+                )
+                .join("")}
             </div>
           </section>
         </div>
@@ -1138,8 +1234,12 @@
         announce(`${city.name}, sección ${button.textContent.trim()}.`);
       });
     });
-    els.detailContent.querySelector("[data-action='share']")?.addEventListener("click", () => shareCity(city));
-    els.detailContent.querySelector("[data-action='export']")?.addEventListener("click", () => exportCity(city));
+    els.detailContent
+      .querySelector("[data-action='share']")
+      ?.addEventListener("click", () => shareCity(city));
+    els.detailContent
+      .querySelector("[data-action='export']")
+      ?.addEventListener("click", () => exportCity(city));
     els.detailContent.querySelectorAll("[data-related-city]").forEach(button => {
       button.addEventListener("click", () => selectCity(button.dataset.relatedCity));
     });
@@ -1196,7 +1296,11 @@
     const url = `${location.origin}${location.pathname}#ciudad=${encodeURIComponent(city.id)}`;
     try {
       if (navigator.share) {
-        await navigator.share({ title: `${city.name} · Atlas HUB`, text: `Explora la ficha de ${city.name} en el Atlas HUB.`, url });
+        await navigator.share({
+          title: `${city.name} · Atlas HUB`,
+          text: `Explora la ficha de ${city.name} en el Atlas HUB.`,
+          url
+        });
         return;
       }
       // navigator.clipboard solo existe bajo HTTPS o localhost.
@@ -1275,7 +1379,9 @@
     // Una pausa corta fuerza a los lectores a releer un texto repetido.
     // setTimeout y no requestAnimationFrame: rAF no corre en pestanas ocultas.
     clearTimeout(announceTimer);
-    announceTimer = setTimeout(() => { els.statusAnnouncer.textContent = message; }, 60);
+    announceTimer = setTimeout(() => {
+      els.statusAnnouncer.textContent = message;
+    }, 60);
   }
 
   function showToast(message) {
@@ -1427,12 +1533,16 @@
 
     // M-04: capturar la rueda siempre es una trampa latente. Si el documento
     // desborda la ventana, el zoom exige Ctrl/Cmd y el scroll normal pasa.
-    els.networkMap.addEventListener("wheel", event => {
-      const pageScrolls = document.documentElement.scrollHeight > window.innerHeight + 1;
-      if (pageScrolls && !event.ctrlKey && !event.metaKey) return;
-      event.preventDefault();
-      zoomMap(event.deltaY > 0 ? 1.12 : 0.89, { x: event.clientX, y: event.clientY });
-    }, { passive: false });
+    els.networkMap.addEventListener(
+      "wheel",
+      event => {
+        const pageScrolls = document.documentElement.scrollHeight > window.innerHeight + 1;
+        if (pageScrolls && !event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        zoomMap(event.deltaY > 0 ? 1.12 : 0.89, { x: event.clientX, y: event.clientY });
+      },
+      { passive: false }
+    );
 
     // M-03: el SVG lleva touch-action: none, asi que el pellizco nativo esta
     // desactivado y hay que reconstruirlo. Con dos punteros activos, la escala
@@ -1475,7 +1585,9 @@
       };
       state.suppressClick = false;
       els.networkMap.classList.add("is-dragging");
-      try { els.networkMap.setPointerCapture(event.pointerId); } catch {}
+      try {
+        els.networkMap.setPointerCapture(event.pointerId);
+      } catch {}
     });
 
     els.networkMap.addEventListener("pointermove", event => {
@@ -1498,7 +1610,9 @@
       const rect = els.networkMap.getBoundingClientRect();
       const dx = ((event.clientX - drag.startX) / rect.width) * view.width;
       const dy = ((event.clientY - drag.startY) / rect.height) * view.height;
-      if (Math.abs(event.clientX - drag.startX) + Math.abs(event.clientY - drag.startY) > 4) drag.moved = true;
+      if (Math.abs(event.clientX - drag.startX) + Math.abs(event.clientY - drag.startY) > 4) {
+        drag.moved = true;
+      }
       view = clampView({ ...view, x: drag.viewX - dx, y: drag.viewY - dy });
       setViewBox();
     });
@@ -1511,7 +1625,11 @@
         if (activePointers.size < 2) {
           state.suppressClick = pinch.moved;
           pinch = null;
-          if (state.suppressClick) setTimeout(() => { state.suppressClick = false; }, 0);
+          if (state.suppressClick) {
+            setTimeout(() => {
+              state.suppressClick = false;
+            }, 0);
+          }
         }
         return;
       }
@@ -1519,8 +1637,12 @@
       state.suppressClick = drag.moved;
       drag = null;
       els.networkMap.classList.remove("is-dragging");
-      try { els.networkMap.releasePointerCapture(event.pointerId); } catch {}
-      setTimeout(() => { state.suppressClick = false; }, 0);
+      try {
+        els.networkMap.releasePointerCapture(event.pointerId);
+      } catch {}
+      setTimeout(() => {
+        state.suppressClick = false;
+      }, 0);
     };
     els.networkMap.addEventListener("pointerup", endDrag);
     els.networkMap.addEventListener("pointercancel", endDrag);

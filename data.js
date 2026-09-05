@@ -19,7 +19,8 @@ const rawCities = [
     population: 352381,
     area: 44.6,
     elevation: 1172,
-    summary: "Nodo centroamericano enfocado en innovación de servicios públicos, participación barrial y resiliencia urbana.",
+    summary:
+      "Nodo centroamericano enfocado en innovación de servicios públicos, participación barrial y resiliencia urbana.",
     themes: ["Innovación pública", "Participación ciudadana", "Datos urbanos"],
     demoPeople: [
       { name: "Valeria Solís Rojas", role: "Coordinadora de innovación abierta" },
@@ -29,7 +30,12 @@ const rawCities = [
     institutionType: "Gobierno local / laboratorio de innovación",
     projects: ["Barrios que cuidan", "Semáforo de servicios urbanos"],
     program: "Academia de innovación municipal",
-    initiatives: ["Reto de datos barriales", "Escuela de facilitadores", "Mapa de cuidados", "Clínica de trámites"],
+    initiatives: [
+      "Reto de datos barriales",
+      "Escuela de facilitadores",
+      "Mapa de cuidados",
+      "Clínica de trámites"
+    ],
     award: "Mención HUB a la colaboración cívica 2025"
   },
   {
@@ -43,7 +49,8 @@ const rawCities = [
     population: 157749,
     area: 14.4,
     elevation: 604,
-    summary: "Comuna metropolitana que prueba soluciones de eficiencia hídrica, movilidad segura y gestión basada en evidencia.",
+    summary:
+      "Comuna metropolitana que prueba soluciones de eficiencia hídrica, movilidad segura y gestión basada en evidencia.",
     themes: ["Agua y resiliencia", "Movilidad sostenible", "Innovación pública"],
     demoPeople: [
       { name: "Antonia Leiva Contreras", role: "Diseñadora de servicios públicos" },
@@ -54,7 +61,8 @@ const rawCities = [
     projects: [
       {
         title: "Piloto de estrategias de ahorro de agua en escuelas",
-        description: "Monitoreo, señales conductuales y reutilización de aguas grises para reducir de forma sostenida el consumo escolar.",
+        description:
+          "Monitoreo, señales conductuales y reutilización de aguas grises para reducir de forma sostenida el consumo escolar.",
         source: "hub",
         status: "Piloto",
         year: 2026
@@ -76,11 +84,10 @@ const rawCities = [
     population: 1565112,
     area: 576,
     elevation: 390,
-    summary: "Ecosistema municipal de GovTech y economía del conocimiento que conecta desafíos públicos con talento emprendedor.",
+    summary:
+      "Ecosistema municipal de GovTech y economía del conocimiento que conecta desafíos públicos con talento emprendedor.",
     themes: ["Innovación pública", "Transformación digital", "Datos urbanos"],
-    demoPeople: [
-      { name: "Lucía Ferreyra", role: "Líder de experimentación urbana" }
-    ],
+    demoPeople: [{ name: "Lucía Ferreyra", role: "Líder de experimentación urbana" }],
     institution: "Municipalidad de Córdoba · CorLab",
     institutionType: "Laboratorio de innovación pública y GovTech",
     projects: ["Gemelo cívico de trámites", "Compras públicas de innovación"],
@@ -99,12 +106,12 @@ const rawCities = [
     population: 604147,
     area: 334.9,
     elevation: 522,
-    summary: "Nodo de planificación sostenible que combina observación territorial, adaptación climática y participación ciudadana.",
+    summary:
+      "Nodo de planificación sostenible que combina observación territorial, adaptación climática y participación ciudadana.",
     themes: ["Planificación urbana", "Datos urbanos", "Agua y resiliencia"],
-    demoPeople: [
-      { name: "Mariana López Coutiño", role: "Especialista en planeación participativa" }
-    ],
-    institution: "Instituto Ciudadano de Planeación Municipal para el Desarrollo Sustentable de Tuxtla Gutiérrez",
+    demoPeople: [{ name: "Mariana López Coutiño", role: "Especialista en planeación participativa" }],
+    institution:
+      "Instituto Ciudadano de Planeación Municipal para el Desarrollo Sustentable de Tuxtla Gutiérrez",
     institutionType: "Instituto municipal de planeación",
     projects: ["Atlas de crecimiento sostenible", "Calles frescas Tuxtla"],
     program: "Planeación cercana",
@@ -122,7 +129,8 @@ const rawCities = [
     population: 160847,
     area: 24.2,
     elevation: 496,
-    summary: "Laboratorio comunal que articula innovación pública, circularidad y respuestas locales a la crisis hídrica.",
+    summary:
+      "Laboratorio comunal que articula innovación pública, circularidad y respuestas locales a la crisis hídrica.",
     themes: ["Agua y resiliencia", "Economía circular", "Innovación pública"],
     demoPeople: [
       { name: "Camila Sepúlveda Díaz", role: "Coordinadora de proyectos urbanos" },
@@ -133,7 +141,8 @@ const rawCities = [
     projects: [
       {
         title: "Piloto de estrategias de ahorro de agua en escuelas",
-        description: "Solución colaborativa con Providencia que integra monitoreo, hábitos y reúso de aguas grises en escuelas.",
+        description:
+          "Solución colaborativa con Providencia que integra monitoreo, hábitos y reúso de aguas grises en escuelas.",
         source: "hub",
         status: "Piloto",
         year: 2026
@@ -141,7 +150,12 @@ const rawCities = [
       "Renca circular"
     ],
     program: "La Fábrica aprende",
-    initiatives: ["Escuelas guardianas del agua", "Mercado circular", "Reto plaza viva", "Monitores de innovación"],
+    initiatives: [
+      "Escuelas guardianas del agua",
+      "Mercado circular",
+      "Reto plaza viva",
+      "Monitores de innovación"
+    ],
     award: "Sello piloto urbano replicable 2025"
   },
   {
@@ -155,7 +169,8 @@ const rawCities = [
     population: 353706,
     area: 303,
     elevation: 177,
-    summary: "Ciudad fronteriza que explora soluciones de movilidad humana, mercados resilientes y planificación inclusiva.",
+    summary:
+      "Ciudad fronteriza que explora soluciones de movilidad humana, mercados resilientes y planificación inclusiva.",
     themes: ["Movilidad sostenible", "Planificación urbana", "Participación ciudadana"],
     demoPeople: [
       { name: "Fernanda Méndez Roblero", role: "Coordinadora de movilidad e inclusión" },
@@ -179,11 +194,10 @@ const rawCities = [
     population: 2746403,
     area: 344.5,
     elevation: 4,
-    summary: "Nodo costero de innovación y competitividad con foco en transformación digital y adaptación basada en ecosistemas.",
+    summary:
+      "Nodo costero de innovación y competitividad con foco en transformación digital y adaptación basada en ecosistemas.",
     themes: ["Transformación digital", "Agua y resiliencia", "Innovación pública"],
-    demoPeople: [
-      { name: "Valentina Cedeño Vera", role: "Líder de innovación climática" }
-    ],
+    demoPeople: [{ name: "Valentina Cedeño Vera", role: "Líder de innovación climática" }],
     institution: "Empresa Pública Municipal para la Gestión de la Innovación y la Competitividad · ÉPICO",
     institutionType: "Empresa pública municipal",
     projects: ["Manglar urbano", "Ventanilla digital 360"],
@@ -202,11 +216,10 @@ const rawCities = [
     population: 1302954,
     area: 530,
     elevation: 43,
-    summary: "Laboratorio urbano con experiencia en gobierno abierto, movilidad barrial y políticas públicas centradas en cuidados.",
+    summary:
+      "Laboratorio urbano con experiencia en gobierno abierto, movilidad barrial y políticas públicas centradas en cuidados.",
     themes: ["Datos urbanos", "Movilidad sostenible", "Participación ciudadana"],
-    demoPeople: [
-      { name: "Lucía Bentancur Silva", role: "Diseñadora de políticas públicas" }
-    ],
+    demoPeople: [{ name: "Lucía Bentancur Silva", role: "Diseñadora de políticas públicas" }],
     institution: "Intendencia de Montevideo · Montevideo Lab",
     institutionType: "Laboratorio de innovación pública",
     projects: ["Laboratorio de movilidad barrial", "Datos abiertos de cuidados"],
@@ -225,17 +238,18 @@ const rawCities = [
     population: 2781641,
     area: 4230,
     elevation: 2850,
-    summary: "Distrito metropolitano andino que vincula gestión del agua, ordenamiento territorial y soluciones basadas en naturaleza.",
+    summary:
+      "Distrito metropolitano andino que vincula gestión del agua, ordenamiento territorial y soluciones basadas en naturaleza.",
     themes: ["Agua y resiliencia", "Hábitat y vivienda", "Planificación urbana"],
-    demoPeople: [
-      { name: "Mateo Andrade Cárdenas", role: "Especialista en infraestructura verde" }
-    ],
-    institution: "Municipio del Distrito Metropolitano de Quito · Secretaría de Hábitat y Ordenamiento Territorial",
+    demoPeople: [{ name: "Mateo Andrade Cárdenas", role: "Especialista en infraestructura verde" }],
+    institution:
+      "Municipio del Distrito Metropolitano de Quito · Secretaría de Hábitat y Ordenamiento Territorial",
     institutionType: "Gobierno metropolitano",
     projects: [
       {
         title: "YAKU",
-        description: "Sistema que capta agua lluvia en células subterráneas y la libera gradualmente al suelo, imitando ecosistemas de montaña.",
+        description:
+          "Sistema que capta agua lluvia en células subterráneas y la libera gradualmente al suelo, imitando ecosistemas de montaña.",
         source: "hub",
         status: "En marcha",
         year: 2026
@@ -243,7 +257,12 @@ const rawCities = [
       "Hábitat de proximidad"
     ],
     program: "Quito territorio vivo",
-    initiatives: ["Patios esponja", "Catálogo de vivienda adaptable", "Datos de quebradas", "Laboratorio de laderas"],
+    initiatives: [
+      "Patios esponja",
+      "Catálogo de vivienda adaptable",
+      "Datos de quebradas",
+      "Laboratorio de laderas"
+    ],
     award: "Sello demo a solución basada en naturaleza 2025"
   },
   {
@@ -258,7 +277,8 @@ const rawCities = [
     population: 116409,
     area: 9.62,
     elevation: 79,
-    summary: "Distrito costero que experimenta con caminabilidad, confort térmico y servicios digitales de proximidad.",
+    summary:
+      "Distrito costero que experimenta con caminabilidad, confort térmico y servicios digitales de proximidad.",
     themes: ["Movilidad sostenible", "Transformación digital", "Agua y resiliencia"],
     demoPeople: [
       { name: "Camila Salazar Ponce", role: "Coordinadora de diseño urbano" },
@@ -282,11 +302,10 @@ const rawCities = [
     population: 1773718,
     area: 434.9,
     elevation: 934,
-    summary: "Capital del sur de Brasil que combina tradición de planificación, movilidad y nuevas capacidades de resiliencia urbana.",
+    summary:
+      "Capital del sur de Brasil que combina tradición de planificación, movilidad y nuevas capacidades de resiliencia urbana.",
     themes: ["Movilidad sostenible", "Agua y resiliencia", "Datos urbanos"],
-    demoPeople: [
-      { name: "Ana Beatriz Souza", role: "Coordinadora de resiliencia urbana" }
-    ],
+    demoPeople: [{ name: "Ana Beatriz Souza", role: "Coordinadora de resiliencia urbana" }],
     institution: "Municipalidad de Curitiba · Coordenadoria Municipal de Proteção e Defesa Civil",
     institutionType: "Gobierno local / defensa civil",
     projects: ["Rutas climáticas", "Defensa Civil Predictiva"],
@@ -305,7 +324,8 @@ const rawCities = [
     population: 2612958,
     area: 380.6,
     elevation: 1495,
-    summary: "Nodo andino de ciudad inteligente que conecta capacidades públicas, tecnología cívica y aprendizaje en las comunas.",
+    summary:
+      "Nodo andino de ciudad inteligente que conecta capacidades públicas, tecnología cívica y aprendizaje en las comunas.",
     themes: ["Transformación digital", "Datos urbanos", "Innovación pública"],
     demoPeople: [
       { name: "Carolina Restrepo Maya", role: "Líder de innovación cívica" },
@@ -315,7 +335,12 @@ const rawCities = [
     institutionType: "Gobierno municipal",
     projects: ["Comunas con datos", "Ruta GovTech Medellín"],
     program: "Medellín aprende haciendo",
-    initiatives: ["Datos en la cuadra", "Reto movilidad accesible", "Laboratorio de servicios", "Mentores GovTech"],
+    initiatives: [
+      "Datos en la cuadra",
+      "Reto movilidad accesible",
+      "Laboratorio de servicios",
+      "Mentores GovTech"
+    ],
     award: "Mención demo a inteligencia urbana 2025"
   },
   {
@@ -329,17 +354,17 @@ const rawCities = [
     population: 1213651,
     area: 228,
     elevation: 1500,
-    summary: "Capital centroamericana que ensaya soluciones accesibles para vivienda, confort térmico y planificación metropolitana.",
+    summary:
+      "Capital centroamericana que ensaya soluciones accesibles para vivienda, confort térmico y planificación metropolitana.",
     themes: ["Hábitat y vivienda", "Agua y resiliencia", "Planificación urbana"],
-    demoPeople: [
-      { name: "Ana Lucía Paredes", role: "Especialista en vivienda y clima" }
-    ],
+    demoPeople: [{ name: "Ana Lucía Paredes", role: "Especialista en vivienda y clima" }],
     institution: "Municipalidad de Guatemala · Gerencia de Planificación",
     institutionType: "Gobierno municipal",
     projects: [
       {
         title: "Guía para la autoadecuación de viviendas y mejora del confort térmico",
-        description: "Autodiagnóstico y catálogo de soluciones de bajo costo para reducir el calor dentro de viviendas existentes.",
+        description:
+          "Autodiagnóstico y catálogo de soluciones de bajo costo para reducir el calor dentro de viviendas existentes.",
         source: "hub",
         status: "En marcha",
         year: 2026
@@ -362,7 +387,8 @@ const rawCities = [
     population: 250192,
     area: 16.9,
     elevation: 610,
-    summary: "Comuna de Santiago enfocada en circularidad, barrios caminables y experimentación con comunidades educativas.",
+    summary:
+      "Comuna de Santiago enfocada en circularidad, barrios caminables y experimentación con comunidades educativas.",
     themes: ["Economía circular", "Movilidad sostenible", "Participación ciudadana"],
     demoPeople: [
       { name: "Francisca Rojas Silva", role: "Coordinadora de economía circular" },
@@ -386,16 +412,20 @@ const rawCities = [
     population: 7929539,
     area: 1775,
     elevation: 2640,
-    summary: "Distrito capital que articula planeación, datos territoriales e innovación aplicada a servicios y sistemas de cuidado.",
+    summary:
+      "Distrito capital que articula planeación, datos territoriales e innovación aplicada a servicios y sistemas de cuidado.",
     themes: ["Datos urbanos", "Planificación urbana", "Innovación pública"],
-    demoPeople: [
-      { name: "Laura Méndez Cárdenas", role: "Diseñadora de servicios urbanos" }
-    ],
+    demoPeople: [{ name: "Laura Méndez Cárdenas", role: "Diseñadora de servicios urbanos" }],
     institution: "Secretaría Distrital de Planeación · Laboratorio de Ciudad de Bogotá",
     institutionType: "Gobierno distrital / laboratorio de ciudad",
     projects: ["Modelo de datos territoriales", "Laboratorio de cuidado urbano"],
     program: "Bogotá prototipa",
-    initiatives: ["Reto manzana del cuidado", "Visor de proximidad", "Residencias de innovación", "Datos con la ciudadanía"],
+    initiatives: [
+      "Reto manzana del cuidado",
+      "Visor de proximidad",
+      "Residencias de innovación",
+      "Datos con la ciudadanía"
+    ],
     award: "Mención demo a planeación con datos 2025"
   },
   {
@@ -409,7 +439,8 @@ const rawCities = [
     population: 121620,
     area: 57,
     elevation: 746,
-    summary: "Ciudad oasis que trabaja sobre gestión hídrica, confort urbano y análisis territorial para la adaptación climática.",
+    summary:
+      "Ciudad oasis que trabaja sobre gestión hídrica, confort urbano y análisis territorial para la adaptación climática.",
     themes: ["Agua y resiliencia", "Datos urbanos", "Planificación urbana"],
     demoPeople: [
       { name: "Paula Quiroga Funes", role: "Arquitecta de adaptación climática" },
@@ -433,7 +464,8 @@ const rawCities = [
     population: 925762,
     area: 9219,
     elevation: 1415,
-    summary: "Ecosistema del norte de México que conecta emprendimiento, innovación pública y respuestas al calor urbano.",
+    summary:
+      "Ecosistema del norte de México que conecta emprendimiento, innovación pública y respuestas al calor urbano.",
     themes: ["Innovación pública", "Transformación digital", "Agua y resiliencia"],
     demoPeople: [
       { name: "Sofía Villalobos Cano", role: "Gestora de ecosistema emprendedor" },
@@ -615,9 +647,15 @@ function checkField(value, kind) {
     case "number":
       return typeof value === "number" && Number.isFinite(value);
     case "date":
-      return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
+      return (
+        typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value))
+      );
     case "string[]":
-      return Array.isArray(value) && value.length > 0 && value.every(item => typeof item === "string" && item.trim());
+      return (
+        Array.isArray(value) &&
+        value.length > 0 &&
+        value.every(item => typeof item === "string" && item.trim())
+      );
     case "object[]":
       return Array.isArray(value) && value.every(item => item && typeof item === "object");
     default:
@@ -632,7 +670,9 @@ function validateAtlas(cities, connections) {
       .filter(([field, kind]) => !checkField(city[field], kind))
       .map(([field]) => field);
     if (!missing.length) return true;
-    issues.push(`Ciudad "${city?.id || "sin id"}" descartada; campos inválidos o ausentes: ${missing.join(", ")}.`);
+    issues.push(
+      `Ciudad "${city?.id || "sin id"}" descartada; campos inválidos o ausentes: ${missing.join(", ")}.`
+    );
     return false;
   });
 
@@ -655,7 +695,11 @@ function validateAtlas(cities, connections) {
 
   const validConnections = connections.filter(connection => {
     const ok = seen.has(connection.from) && seen.has(connection.to);
-    if (!ok) issues.push(`Conexión descartada: ${connection.from} ↔ ${connection.to} apunta a una ciudad inexistente.`);
+    if (!ok) {
+      issues.push(
+        `Conexión descartada: ${connection.from} ↔ ${connection.to} apunta a una ciudad inexistente.`
+      );
+    }
     return ok;
   });
 

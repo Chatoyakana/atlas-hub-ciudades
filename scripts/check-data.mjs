@@ -36,7 +36,11 @@ const ids = new Set(atlas.cities.map(city => city.id));
 check("los identificadores son únicos", ids.size === atlas.cities.length);
 
 const orphans = atlas.connections.filter(c => !ids.has(c.from) || !ids.has(c.to));
-check("ninguna conexión apunta a una ciudad inexistente", orphans.length === 0, `${orphans.length} huérfanas`);
+check(
+  "ninguna conexión apunta a una ciudad inexistente",
+  orphans.length === 0,
+  `${orphans.length} huérfanas`
+);
 
 const countries = new Set(atlas.cities.map(city => city.country));
 const geoNames = new Set(geojson.features.map(feature => feature.properties.name));
@@ -52,8 +56,14 @@ for (const [field, minimum] of Object.entries(minimums)) {
 
 console.log("\nProcedencia y contenido");
 const everyRecordHasSource = atlas.cities.every(city =>
-  [...city.people, ...city.institutions, ...city.projects, ...city.programs, ...city.initiatives, ...city.awards]
-    .every(record => record.source === "hub" || record.source === "demo")
+  [
+    ...city.people,
+    ...city.institutions,
+    ...city.projects,
+    ...city.programs,
+    ...city.initiatives,
+    ...city.awards
+  ].every(record => record.source === "hub" || record.source === "demo")
 );
 check("todo registro declara su procedencia (hub o demo)", everyRecordHasSource);
 

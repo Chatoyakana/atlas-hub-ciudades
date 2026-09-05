@@ -88,6 +88,7 @@ Las herramientas son solo de desarrollo:
 npm install
 npm test        # valida el modelo de datos y los mínimos por ficha
 npm run lint    # ESLint
+npm run format  # Prettier
 ```
 
 `npm test` no necesita navegador: carga `data.js` en un contexto mínimo y
@@ -96,10 +97,8 @@ comprueba las invariantes que la interfaz da por supuestas —identificadores
 declarada en cada registro y los mínimos que promete este README—. La
 integración continua ejecuta ambos en cada `push`.
 
-`npm run format` (Prettier) está disponible pero aún no se ha aplicado al
-código heredado: reformatearlo son unas 3.700 líneas y conviene que vaya en su
-propio commit, no mezclado con cambios de comportamiento. Por eso el CI todavía
-no comprueba formato.
+`npm run format` aplica Prettier; `npm run format:check` lo verifica sin
+escribir, y el CI lo ejecuta en cada `push`.
 
 ## Validación de datos
 
