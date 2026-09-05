@@ -27,6 +27,12 @@
   box-sizing: border-box;
 }
 
+/* El display: none del atributo hidden lo pone la hoja del navegador, así que
+   cualquier regla de autor con display: flex/grid lo anula en silencio. */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   height: 100%;
@@ -2683,4 +2689,178 @@ svg {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* ---------------------------------------------------------------
+   N-02 · Vista de directorio
+   --------------------------------------------------------------- */
+
+.directory-view {
+  height: calc(100vh - 178px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0 22px 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: white;
+  overflow: hidden;
+}
+
+.directory-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 20px 24px 17px;
+  border-bottom: 1px solid var(--line);
+}
+
+.directory-head h2 {
+  margin: 6px 0 3px;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.directory-head p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.directory-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.directory-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.directory-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  padding: 10px 24px;
+  background: #f4f9fa;
+  border-bottom: 1px solid var(--line);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.directory-table tbody th,
+.directory-table tbody td {
+  padding: 11px 24px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-weight: 400;
+  vertical-align: middle;
+  color: var(--ink-soft);
+}
+
+.directory-table tbody tr:hover th,
+.directory-table tbody tr:hover td {
+  background: #f8fbfb;
+}
+
+.directory-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.directory-person__copy {
+  display: grid;
+  gap: 1px;
+}
+
+.directory-person__copy strong {
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.directory-person__copy span {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.directory-city {
+  display: grid;
+  gap: 1px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--hub-blue);
+  font-weight: 600;
+}
+
+.directory-city span {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.directory-city:hover {
+  text-decoration: underline;
+}
+
+.directory-empty {
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 840px) {
+  .directory-view {
+    height: calc(100vh - 130px);
+    margin: 0 14px 14px;
+  }
+
+  .directory-head {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 16px 14px;
+  }
+
+  /* La tabla no cabe en un teléfono: cada persona pasa a ser una ficha. */
+  .directory-table thead {
+    display: none;
+  }
+
+  .directory-table,
+  .directory-table tbody,
+  .directory-table tr {
+    display: block;
+  }
+
+  .directory-table tr {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .directory-table tbody th,
+  .directory-table tbody td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+
+  .directory-table tbody td {
+    margin-top: 5px;
+    font-size: 12px;
+  }
 }

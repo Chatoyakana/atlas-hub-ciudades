@@ -47,6 +47,9 @@
       <button class="prototype-pill" type="button" data-open-method>
         <span></span> Prototipo · datos demo
       </button>
+      <button class="icon-button mobile-filter-button" id="openDirectoryButton" type="button" aria-label="Ver directorio de personas">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 6h5M16 10h5M17 14h4"/></svg>
+      </button>
       <button class="icon-button mobile-filter-button" id="openFiltersButton" type="button" aria-label="Abrir filtros">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
       </button>
@@ -204,6 +207,35 @@
   </main>
 
   <p class="visually-hidden" id="statusAnnouncer" role="status" aria-live="polite"></p>
+  <section class="directory-view" id="directoryView" aria-labelledby="directoryTitle" hidden>
+    <div class="directory-head">
+      <div>
+        <div class="eyebrow"><span class="eyebrow__line"></span> PERSONAS E INSTITUCIONES DE LA RED</div>
+        <h2 id="directoryTitle">Directorio</h2>
+        <p id="directoryCount">—</p>
+      </div>
+      <button class="toolbar-button" type="button" id="directoryClose">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3V6Z"/><path d="M9 3v15M15 6v15"/></svg>
+        Volver al mapa
+      </button>
+    </div>
+    <div class="directory-scroll">
+      <table class="directory-table">
+        <caption class="visually-hidden">Personas de la red, con su cargo, institución, ciudad y procedencia del registro</caption>
+        <thead>
+          <tr>
+            <th scope="col">Persona</th>
+            <th scope="col">Institución</th>
+            <th scope="col">Ciudad</th>
+            <th scope="col">Fuente</th>
+          </tr>
+        </thead>
+        <tbody id="directoryBody"></tbody>
+      </table>
+      <p class="directory-empty" id="directoryEmpty" hidden>Ninguna persona coincide con los filtros activos.</p>
+    </div>
+  </section>
+
   <div class="mobile-backdrop" id="mobileBackdrop" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="share-fallback" id="shareFallback" hidden>

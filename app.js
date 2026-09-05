@@ -45,7 +45,14 @@
     sortLabel: document.getElementById("sortLabel"),
     shareFallback: document.getElementById("shareFallback"),
     shareUrl: document.getElementById("shareUrl"),
-    shareFallbackClose: document.getElementById("shareFallbackClose")
+    shareFallbackClose: document.getElementById("shareFallbackClose"),
+    workspace: document.querySelector(".workspace"),
+    directoryView: document.getElementById("directoryView"),
+    directoryBody: document.getElementById("directoryBody"),
+    directoryCount: document.getElementById("directoryCount"),
+    directoryEmpty: document.getElementById("directoryEmpty"),
+    directoryClose: document.getElementById("directoryClose"),
+    openDirectoryButton: document.getElementById("openDirectoryButton")
   };
 
   const allThemes = [...new Set(cities.flatMap(city => city.themes))].sort((a, b) => a.localeCompare(b, "es"));
@@ -67,7 +74,8 @@
     filteredIds: new Set(cities.map(city => city.id)),
     suppressClick: false,
     filtersOpener: null,
-    detailOpener: null
+    detailOpener: null,
+    directoryOpen: false
   };
 
   const svgNS = "http://www.w3.org/2000/svg";
@@ -280,6 +288,7 @@
     }
 
     renderCityList(filtered);
+    if (state.directoryOpen) renderDirectory();
     renderThemeChips();
     renderMapState(filtered);
     renderDetail();
@@ -998,6 +1007,70 @@
       </section>`;
   }
 
+  // N-02: "Directorio" solo enfocaba el buscador. Esta es la vista que la
+  // etiqueta anuncia: las personas de la red en una tabla, con su institucion,
+  // su ciudad y la procedencia del registro, sujeta a los mismos filtros.
+  const directoryPeople = cities
+    .flatMap(city => city.people.map(person => ({ ...person, city })))
+    .sort((a, b) =>
+      a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+    );
+
+  function renderDirectory() {
+    const visible = directoryPeople.filter(entry => state.filteredIds.has(entry.city.id));
+    const fromHub = visible.filter(entry => entry.source === "hub").length;
+
+    els.directoryCount.textContent = visible.length
+      ? `${visible.length} ${visible.length === 1 ? "persona" : "personas"} · ${fromHub} con fuente en el directorio del HUB`
+      : "Sin personas para los filtros activos";
+
+    els.directoryEmpty.hidden = visible.length > 0;
+    els.directoryBody.innerHTML = visible.map(entry => `
+      <tr>
+        <th scope="row">
+          <span class="directory-person">
+            <span class="person-avatar">${escapeHTML(entry.initials)}</span>
+            <span class="directory-person__copy">
+              <strong>${escapeHTML(entry.name)}</strong>
+              <span>${escapeHTML(entry.role)}</span>
+            </span>
+          </span>
+        </th>
+        <td>${escapeHTML(entry.organization)}</td>
+        <td>
+          <button class="directory-city" type="button" data-directory-city="${escapeHTML(entry.city.id)}">
+            ${escapeHTML(entry.city.name)}<span>${escapeHTML(entry.city.country)}</span>
+          </button>
+        </td>
+        <td>${sourceBadge(entry.source)}</td>
+      </tr>`).join("");
+
+    els.directoryBody.querySelectorAll("[data-directory-city]").forEach(button => {
+      button.addEventListener("click", () => {
+        closeDirectory();
+        selectCity(button.dataset.directoryCity);
+      });
+    });
+  }
+
+  function openDirectory() {
+    state.directoryOpen = true;
+    renderDirectory();
+    els.directoryView.hidden = false;
+    els.workspace.hidden = true;
+    setActiveNav("directorio");
+    els.directoryClose.focus();
+    announce("Vista de directorio abierta.");
+  }
+
+  function closeDirectory() {
+    if (!state.directoryOpen) return;
+    state.directoryOpen = false;
+    els.directoryView.hidden = true;
+    els.workspace.hidden = false;
+    setActiveNav("mapa");
+  }
+
   function renderGlobalDetail() {
     const actorCount = cities.reduce((sum, city) => sum + city.people.length, 0);
     const actionTotal = cities.reduce((sum, city) => sum + actionCount(city), 0);
@@ -1080,6 +1153,7 @@
 
   function selectCity(id, { updateHash = true } = {}) {
     if (!cityById.has(id)) return;
+    closeDirectory();
     if (state.selectedId !== id && isOverlayWidth()) state.detailOpener = document.activeElement;
     state.selectedId = id;
     state.detailTab = "resumen";
@@ -1455,6 +1529,17 @@
     els.mobileResultsButton.addEventListener("click", openFilters);
     els.closeFiltersButton.addEventListener("click", closeFilters);
     els.shareFallbackClose?.addEventListener("click", hideShareFallback);
+    // En movil la barra de navegacion esta oculta, asi que el directorio
+    // necesita su propia entrada en la cabecera.
+    els.openDirectoryButton?.addEventListener("click", () => {
+      closeFilters();
+      openDirectory();
+    });
+
+    els.directoryClose.addEventListener("click", () => {
+      closeDirectory();
+      document.querySelector("[data-nav='mapa']")?.focus();
+    });
 
     els.mobileBackdrop.addEventListener("click", () => {
       closeFilters();
@@ -1480,12 +1565,12 @@
       if (!button) return;
       setActiveNav(button.dataset.nav);
       if (button.dataset.nav === "mapa") {
+        closeDirectory();
         resetMap();
         closeFilters();
         showToast("Vista cartográfica activa.");
       } else if (button.dataset.nav === "directorio") {
-        if (window.innerWidth <= 700) openFilters();
-        else els.citySearch.focus();
+        openDirectory();
       }
     });
 
@@ -1497,6 +1582,7 @@
       }
       if (event.key === "Escape") {
         if (els.shareFallback && !els.shareFallback.hidden) hideShareFallback();
+        else if (state.directoryOpen) closeDirectory();
         else if (els.explorerPanel.classList.contains("is-open")) closeFilters();
         else if (isOverlayWidth() && state.selectedId) closeDetail();
       }

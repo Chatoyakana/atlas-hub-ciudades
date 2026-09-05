@@ -7,6 +7,7 @@ Prototipo navegable de exploración cartográfica para la red del HUB de Ciudade
 - Mapa vectorial interactivo de América Latina y el Caribe.
 - 17 ciudades del directorio público del HUB en 10 países.
 - Búsqueda por ciudad, persona, institución, proyecto o iniciativa.
+- Vista de directorio: las 51 personas de la red con su institución, ciudad y procedencia, sujeta a los mismos filtros.
 - Filtros por país y tema de conocimiento.
 - Conexiones temáticas entre nodos.
 - Ficha por ciudad con:
@@ -104,6 +105,14 @@ no comprueba formato.
 no lo cumple se descarta y queda anotado en `HUB_ATLAS.issues`; la interfaz lo
 avisa por consola y con un mensaje, en lugar de propagar el dato hasta un error
 de render. Lo mismo con las conexiones que apuntan a una ciudad inexistente.
+
+## Licencia
+
+El código se publica bajo licencia MIT y el contenido bajo
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/deed.es), de modo que
+cualquier ciudad de la red pueda reutilizarlo citando la fuente. Quedan fuera
+los datos personales del directorio del HUB y la cartografía de Natural Earth
+—dominio público—, que conservan su propia procedencia. Ver [LICENSE](LICENSE).
 
 ## Próxima fase sugerida
 

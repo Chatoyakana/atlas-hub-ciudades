@@ -1,0 +1,44 @@
+MIT License
+
+Copyright (c) 2026 Chatoyakana
+
+Se concede permiso, libre de cargo, a cualquier persona que obtenga una copia de
+este software y de los archivos de documentación asociados (el "Software"), a
+utilizar el Software sin restricción, incluyendo sin limitación los derechos a
+usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender
+copias del Software, y a permitir a las personas a las que se les proporcione el
+Software a hacer lo mismo, sujeto a las siguientes condiciones:
+
+El aviso de copyright anterior y este aviso de permiso se incluirán en todas las
+copias o partes sustanciales del Software.
+
+EL SOFTWARE SE PROPORCIONA "COMO ESTÁ", SIN GARANTÍA DE NINGÚN TIPO, EXPRESA O
+IMPLÍCITA, INCLUYENDO PERO NO LIMITADO A GARANTÍAS DE COMERCIALIZACIÓN,
+IDONEIDAD PARA UN PROPÓSITO PARTICULAR E INCUMPLIMIENTO. EN NINGÚN CASO LOS
+AUTORES O TITULARES DEL COPYRIGHT SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN,
+DAÑOS U OTRAS RESPONSABILIDADES, YA SEA EN UNA ACCIÓN CONTRACTUAL, AGRAVIO O
+CUALQUIER OTRO MOTIVO, DERIVADAS DE, FUERA DE O EN CONEXIÓN CON EL SOFTWARE O SU
+USO U OTRO TIPO DE ACCIONES EN EL SOFTWARE.
+
+---
+
+NOTA SOBRE EL CONTENIDO
+
+Esta licencia MIT cubre el código del prototipo: index.html, styles.css, app.js,
+scripts/ y la configuración del proyecto.
+
+El contenido —los textos descriptivos, los datos de demostración y el modelo de
+conocimiento de data.js— se publica bajo Creative Commons Atribución 4.0
+Internacional (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/deed.es
+
+Dos excepciones, que no son obra de este proyecto y conservan su propia
+procedencia:
+
+  · data/personas-hub.js recoge datos publicados en el directorio del HUB de
+    Ciudades (https://hubdeciudades.org/directorio/). Son datos personales de
+    fuente pública; su reutilización está sujeta a la normativa de protección de
+    datos aplicable, no a esta licencia. Ver la sección "Datos personales" del
+    README.
+
+  · data/latam-countries.geojson procede de Natural Earth (Admin 0 - Countries,
+    escala 1:110m), que es de dominio público.
