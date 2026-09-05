@@ -584,6 +584,11 @@
     buildConnections();
     buildMarkers();
     buildMetroMarkers();
+    // Después de ambos: las etiquetas de ciudad y de grupo compiten por el
+    // mismo espacio, así que se colocan en una sola pasada.
+    layoutLabels();
+    // Las métricas de texto cambian cuando termina de cargar la tipografía.
+    document.fonts?.ready.then(layoutLabels);
     // Conexiones y nodos por encima de los paises.
     els.networkMap
       .querySelector("#mapViewport")
@@ -704,6 +709,7 @@
   ];
   const LABEL_HEIGHT = 11;
   const NODE_RADIUS = 11.5;
+  const METRO_RADIUS = 16;
 
   function overlapArea(a, b) {
     const width = Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1);
@@ -737,24 +743,44 @@
   // Coloca las etiquetas evitando cajas ya ocupadas. Las ciudades con mas
   // acciones eligen primero, de modo que las densas conservan la mejor posicion.
   function layoutLabels() {
+    const nodeBox = (x, y, radius) => ({
+      x1: x - radius,
+      y1: y - radius,
+      x2: x + radius,
+      y2: y + radius
+    });
+
     const nodes = cities.map(city => {
       const pos = markerPosition(city);
-      return {
-        x1: pos.x - NODE_RADIUS,
-        y1: pos.y - NODE_RADIUS,
-        x2: pos.x + NODE_RADIUS,
-        y2: pos.y + NODE_RADIUS
-      };
+      return nodeBox(pos.x, pos.y, NODE_RADIUS);
     });
-    const placed = [];
-    const order = [...cities].sort(
-      (a, b) => actionCount(b) - actionCount(a) || a.name.localeCompare(b.name, "es")
-    );
+    metros.forEach(metro => {
+      const [x, y] = project([metro.lon, metro.lat]);
+      nodes.push(nodeBox(x, y, METRO_RADIUS));
+    });
 
-    order.forEach(city => {
-      const label = els.markerLayer.querySelector(`[data-marker-id="${CSS.escape(city.id)}"] .city-label`);
+    const placed = [];
+
+    // Los grupos metropolitanos eligen primero: son los que se ven mientras el
+    // mapa está alejado, que es el estado en el que se lee el mapa completo.
+    const targets = [
+      ...metros.map(metro => {
+        const [x, y] = project([metro.lon, metro.lat]);
+        return {
+          label: els.metroLayer.querySelector(`[data-metro-id="${CSS.escape(metro.id)}"] .city-label`),
+          pos: { x, y }
+        };
+      }),
+      ...[...cities]
+        .sort((a, b) => actionCount(b) - actionCount(a) || a.name.localeCompare(b.name, "es"))
+        .map(city => ({
+          label: els.markerLayer.querySelector(`[data-marker-id="${CSS.escape(city.id)}"] .city-label`),
+          pos: markerPosition(city)
+        }))
+    ];
+
+    targets.forEach(({ label, pos }) => {
       if (!label) return;
-      const pos = markerPosition(city);
       let width;
       try {
         width = label.getComputedTextLength() || 0;
@@ -839,10 +865,6 @@
 
       els.markerLayer.appendChild(group);
     });
-
-    layoutLabels();
-    // Las metricas de texto cambian cuando termina de cargar la tipografia.
-    document.fonts?.ready.then(layoutLabels);
   }
 
   function showTooltip(city, event, fromKeyboard = false) {
