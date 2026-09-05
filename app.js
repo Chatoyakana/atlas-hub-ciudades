@@ -96,6 +96,9 @@
 
   // Por debajo de este ancho de viewBox el mapa se considera "acercado" y los
   // grupos se abren. baseView.width ronda 672 con el encuadre calculado.
+  // Cuánto se puede acercar respecto al mapa completo. Con el tope anterior
+  // —2,7x— un solo pellizco ya lo agotaba y el gesto se quedaba muerto.
+  const MAX_ZOOM = 8;
   const METRO_EXPAND_WIDTH = 430;
   // Nivel al que se acerca el mapa al seleccionar una ciudad.
   const FOCUS_WIDTH = 300;
@@ -2228,7 +2231,7 @@
   }
 
   function clampView(next) {
-    next.width = Math.min(baseView.width, Math.max(250, next.width));
+    next.width = Math.min(baseView.width, Math.max(baseView.width / MAX_ZOOM, next.width));
     next.height = next.width * (baseView.height / baseView.width);
     if (next.height > baseView.height) {
       next.height = baseView.height;
@@ -2366,13 +2369,28 @@
 
     // M-04: capturar la rueda siempre es una trampa latente. Si el documento
     // desborda la ventana, el zoom exige Ctrl/Cmd y el scroll normal pasa.
+    //
+    // El factor sale de la magnitud del gesto, no de su dirección. Un paso fijo
+    // por evento daba saltos del 12% con el trackpad, que manda ráfagas de
+    // eventos muy pequeños: el pellizco avanzaba a tirones en vez de seguir a
+    // los dedos. El pellizco de trackpad llega precisamente así, como wheel con
+    // ctrlKey y deltas finos, mientras que una rueda de ratón manda saltos
+    // grandes y espaciados; de ahí las dos sensibilidades.
     els.networkMap.addEventListener(
       "wheel",
       event => {
         const pageScrolls = document.documentElement.scrollHeight > window.innerHeight + 1;
         if (pageScrolls && !event.ctrlKey && !event.metaKey) return;
         event.preventDefault();
-        zoomMap(event.deltaY > 0 ? 1.12 : 0.89, { x: event.clientX, y: event.clientY });
+
+        // deltaMode: 0 píxeles, 1 líneas, 2 páginas.
+        const unidad = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? 100 : 1;
+        const delta = event.deltaY * unidad;
+        const sensibilidad = event.ctrlKey ? 0.01 : 0.0035;
+        // El tope por evento evita que una rueda con deltas enormes salte de
+        // un extremo al otro del mapa de una vez.
+        const factor = Math.min(1.6, Math.max(0.625, Math.exp(delta * sensibilidad)));
+        zoomMap(factor, { x: event.clientX, y: event.clientY });
       },
       { passive: false }
     );
